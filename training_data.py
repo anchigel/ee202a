@@ -3,11 +3,11 @@ from sklearn import svm, neighbors
 from sklearn.metrics import accuracy_score
 import sys
 
-#######USAGE########
-# a: number of samples in each dataset
-# python training_data.py <a>  
+#######USAGE####################################################################################
+# a: number of samples in each dataset, type: type of classifier algorithm, e.g. svm, knn
+# python training_data.py <a> <type>
 #
-#
+#################################################################################################
 
 #target = np.loadtxt("data_target.csv", delimiter=",")
 #print(target)
@@ -17,10 +17,12 @@ if len(sys.argv) < 3:
     print("Example: python training_data.py 50 svm")
     exit(1)
 
+training_part = 0.9
+
 tmp = np.array([0, 1])
-target = np.repeat(tmp,int(int(sys.argv[1])*0.7))
+target = np.repeat(tmp,int(int(sys.argv[1])*training_part))
 #print(target)
-train = int(sys.argv[1])*0.7
+train = int(sys.argv[1])*training_part
 #print(train)
 
 data0 = np.loadtxt("testFeatures0.csv", delimiter=',')
@@ -48,22 +50,23 @@ testing_data = np.vstack((tmp4,tmp3))
 #print(len(training_data))
 
 if sys.argv[2] == 'svm':
-    clf = svm.SVC(gamma=0.001, C=100.)
+    clf = svm.SVC(gamma=0.0004)
 elif sys.argv[2] == 'knn':
-    clf = neighbors.KNeighborsClassifier()
+    clf = neighbors.KNeighborsClassifier(weights='distance',n_neighbors=10)
 else:
     print("Current algorithms available: svm, knn")
     print("Usage: python training_data.py <num samples in each dataset> <classifier type>")
     print("Example: python training_data.py 50 svm")
     exit(1)
-    exit(1)
 
 clf.fit(training_data,target)
 
-num_test = int(sys.argv[1])-int(int(sys.argv[1])*0.7)
+num_test = int(sys.argv[1])-int(int(sys.argv[1])*training_part)
 gnd_truth = np.repeat(tmp,num_test)
 print(gnd_truth)
+
 x = clf.predict(testing_data)
 print(x)
+
 accuracy = accuracy_score(gnd_truth,x)
 print("Accuracy: " + str(accuracy))
