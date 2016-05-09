@@ -15,6 +15,17 @@ if len(sys.argv) < 4:
     print("Usage: python training_data.py <num_samples> <classifier_type> <folder>")
     print("Example: python training_data.py 50 svm Test1")
     sys.exit(1)
+    
+###Determine algorithm to use
+if sys.argv[2] == 'svm':
+    clf = svm.SVC(gamma=0.0004)
+elif sys.argv[2] == 'knn':
+    clf = neighbors.KNeighborsClassifier(weights='distance',n_neighbors=10)
+else:
+    print("Current algorithms available: svm, knn")
+    print("Usage: python training_data.py <num_samples> <classifier_type> <folder>")
+    print("Example: python training_data.py 50 svm Test1")
+    sys.exit(1)
 
 ###Percentage of data used for training
 training_part = 0.7
@@ -47,17 +58,6 @@ tmp2 = np.vstack((data1_2[int(train)/5:],data1_3[int(train)/5:]))
 tmp3 = np.vstack((data1_4[int(train)/5:],data1_5[int(train)/5:]))
 tmp4 = np.vstack((tmp1,tmp2))
 testing_data = np.vstack((tmp4,tmp3))
-
-###Determine algorithm to use
-if sys.argv[2] == 'svm':
-    clf = svm.SVC(gamma=0.0004)
-elif sys.argv[2] == 'knn':
-    clf = neighbors.KNeighborsClassifier(weights='distance',n_neighbors=10)
-else:
-    print("Current algorithms available: svm, knn")
-    print("Usage: python training_data.py <num samples in each dataset> <classifier type>")
-    print("Example: python training_data.py 50 svm")
-    sys.exit(1)
 
 ###Fit training data to target
 clf.fit(training_data,target)
