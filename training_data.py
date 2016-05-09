@@ -5,19 +5,20 @@ import sys
 
 #######USAGE####################################################################################
 # a: number of samples in each dataset, type: type of classifier algorithm, e.g. svm, knn
-# python training_data.py <a> <type>
-#
+# folder: folder in current directory that contains the dataset files
+# python training_data.py <num> <type> <folder>
+# Example: python training_data.py 50 svm Test1
 #################################################################################################
 
 #target = np.loadtxt("data_target.csv", delimiter=",")
 #print(target)
 
-if len(sys.argv) < 3:
-    print("Usage: python training_data.py <num samples in each dataset> <classifier type>")
-    print("Example: python training_data.py 50 svm")
+if len(sys.argv) < 4:
+    print("Usage: python training_data.py <num_samples> <classifier_type> <folder>")
+    print("Example: python training_data.py 50 svm Test1")
     exit(1)
 
-training_part = 0.9
+training_part = 0.7
 
 tmp = np.array([0, 1])
 target = np.repeat(tmp,int(int(sys.argv[1])*training_part))
@@ -25,12 +26,12 @@ target = np.repeat(tmp,int(int(sys.argv[1])*training_part))
 train = int(sys.argv[1])*training_part
 #print(train)
 
-data0 = np.loadtxt("testFeatures0.csv", delimiter=',')
-data1_1 = np.loadtxt("testFeatures1.csv", delimiter=',')
-data1_2 = np.loadtxt("testFeatures2.csv", delimiter=',')
-data1_3 = np.loadtxt("testFeatures3.csv", delimiter=',')
-data1_4 = np.loadtxt("testFeatures4.csv", delimiter=',')
-data1_5 = np.loadtxt("testFeatures5.csv", delimiter=',')
+data0 = np.loadtxt(sys.argv[3]+"/testFeatures_0.csv", delimiter=',')
+data1_1 = np.loadtxt(sys.argv[3]+"/testFeatures_1.csv", delimiter=',')
+data1_2 = np.loadtxt(sys.argv[3]+"/testFeatures_2.csv", delimiter=',')
+data1_3 = np.loadtxt(sys.argv[3]+"/testFeatures_3.csv", delimiter=',')
+data1_4 = np.loadtxt(sys.argv[3]+"/testFeatures_4.csv", delimiter=',')
+data1_5 = np.loadtxt(sys.argv[3]+"/testFeatures_5.csv", delimiter=',')
 
 tmp1 = np.vstack((data0[0:int(train)],data1_1[0:int(train)/5]))
 tmp2 = np.vstack((data1_2[0:int(train)/5],data1_3[0:int(train)/5]))

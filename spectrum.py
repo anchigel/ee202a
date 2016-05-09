@@ -16,13 +16,16 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-###########USAGE#########
-# For training purposes: First argument: number of people in the room, Second argument: number of samples wanted
-# python spectrum.py <# people in room (0-2)> <# samples> 
+###########USAGE###########################################################################################################
+# For training purposes: First argument: string to be appended to the filename, Second argument: number of samples to be collected
+# python spectrum.py <ending filename> <# samples> 
+# Example: python spectrum.py 0 50
+#      Output file will be testFeatures_0.csv with 50 samples within the file
 #
 # Without any arguments, output file will be testFeatures.csv with at most 100 samples
 # python spectrum.py 
 #
+############################################################################################################################
 
 import array
 import struct
@@ -62,7 +65,7 @@ client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect("192.168.8.1", username='root', password='myRouter')
 
 if len(sys.argv) >= 2:
-    file_name = 'testFeatures' + sys.argv[1] + '.csv'
+    file_name = 'testFeatures_' + sys.argv[1] + '.csv'
     open(file_name, 'w').close()
 else:
     open('testFeatures.csv', 'w').close()
@@ -220,11 +223,9 @@ while loops < n:
             continue
                 
         ###Data should be ok, write into file
-        z = 0
-        for x in TestData:
-            z = z + 1
-            tDfile.write(str(x))
-            if z != y:
+        for z, item in enumerate(TestData):
+            tDfile.write(str(item))
+            if z < y-1:
                 tDfile.write(',')
         tDfile.write('\n')	
         loops = loops+1
