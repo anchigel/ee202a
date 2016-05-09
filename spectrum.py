@@ -16,16 +16,18 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-###########USAGE###########################################################################################################
-# For training purposes: First argument: string to be appended to the filename, Second argument: number of samples to be collected
-# python spectrum.py <ending filename> <# samples> 
-# Example: python spectrum.py 0 50
-#      Output file will be testFeatures_0.csv with 50 samples within the file
-#
-# Without any arguments, output file will be testFeatures.csv with at most 100 samples
-# python spectrum.py 
-#
-############################################################################################################################
+################################################################################################
+### USAGE:
+### For training purposes: <ending filename>: string to be appended to the filename 
+###                        <num samples>: number of samples to be collected
+### python spectrum.py <ending filename> <num samples> 
+### Example: python spectrum.py 0 50
+###     Output file will be testFeatures_0.csv with 50 samples within the file
+###
+### Without any arguments, output file will be testFeatures.csv with at most 100 samples
+### python spectrum.py 
+###
+################################################################################################
 
 import array
 import struct
@@ -56,46 +58,45 @@ scatter_max, = ax.plot([], [], 'g')
 plt.show()
 plt.grid(True)
 
-
 #print "time,freq,signal"
 
-####SSH into router
+###SSH into router
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect("192.168.8.1", username='root', password='myRouter')
 
+###Output file name
 if len(sys.argv) >= 2:
     file_name = 'testFeatures_' + sys.argv[1] + '.csv'
     open(file_name, 'w').close()
 else:
     open('testFeatures.csv', 'w').close()
 
+###Run commands on router to began spectral scanning
 stdin, stdout, stderr = client.exec_command('echo 1 > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_count')
 stdin, stdout, stderr = client.exec_command('echo chanscan > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_scan_ctl')
 
+###Determine number of samples to collect
 loops = 0
 if len(sys.argv) < 3:
     n = 100
 else:
     n = int(sys.argv[2])
-#print(n)
+
 while loops < n:
-    #print(loops)
     ### do measurement
     
-    ###Run script to get channel info and transfer file using scp
+    ###Run commands on router to get channel info and transfer file using scp
     #stdin, stdout, stderr = client.exec_command('./run.sh')
-    
     stdin, stdout, stderr = client.exec_command('iw dev wlan0 scan')
     stdin, stdout, stderr = client.exec_command('cat /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_scan0 > samples')
     #stdin, stdout, stderr = client.exec_command('echo disable > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_scan_ctl')    
-    #sleep(1)
     with SCPClient(client.get_transport()) as scp:
         scp.get('samples')
 
     with open("samples", "rb") as file:
 
-        #
+        ###Binary file -> each 76 bytes corresponds to one frame/channel
         data = file.read(76)
 
         x = []
@@ -104,7 +105,7 @@ while loops < n:
 
         fo = open("data.txt", "w+")
         fo.write("max_exp,freq,rssi,noise,max_magnitude,max_index,bitmap_weight,tsf\n")
-        data_array = np.array([0,0,0,0,0,0,0,0])
+        #data_array = np.array([0,0,0,0,0,0,0,0])
 
         while data != "":
             t, length = struct.unpack(">BH", data[0:3])
@@ -125,26 +126,24 @@ while loops < n:
             #print "bitmap_weight: " + str(bitmap_weight)
             #print "tsf: "           + str(tsf)
 
-            tmp = np.array([max_exp, freq, rssi, noise, max_magnitude, max_index, bitmap_weight, tsf])
-            data_array = np.vstack((data_array,tmp))            
-
-            fo.write(str(max_exp))
-            fo.write(',')
-            fo.write(str(freq))
-            fo.write(',')
-            fo.write(str(rssi))
-            fo.write(',')
-            fo.write(str(noise))
-            fo.write(',')
-            fo.write(str(max_magnitude))
-            fo.write(',')
-            fo.write(str(max_index))
-            fo.write(',')
-            fo.write(str(bitmap_weight))
-            fo.write(',')
-            fo.write(str(tsf))
-            fo.write('\n')
-
+            #tmp = np.array([max_exp, freq, rssi, noise, max_magnitude, max_index, bitmap_weight, tsf])
+            #data_array = np.vstack((data_array,tmp))            
+            #fo.write(str(max_exp))
+            #fo.write(',')
+            #fo.write(str(freq))
+            #fo.write(',')
+            #fo.write(str(rssi))
+            #fo.write(',')
+            #fo.write(str(noise))
+            #fo.write(',')
+            #fo.write(str(max_magnitude))
+            #fo.write(',')
+            #fo.write(str(max_index))
+            #fo.write(',')
+            #fo.write(str(bitmap_weight))
+            #fo.write(',')
+            #fo.write(str(tsf))
+            #fo.write('\n')
 
             ### measurements
             measurements = array.array("B")
@@ -163,7 +162,7 @@ while loops < n:
                 v = 10.0**((noise + rssi + 20.0 * np.log10(m << max_exp) - 10.0 * np.log10(squaresum))/10.0)
                 #v = noise + rssi + 20.0 * np.log10(m << max_exp) - 10.0 * np.log10(squaresum)
                 
-                ###20MHz channel with 56 subcarriers used but 64 total subcarriers
+                ###20MHz channel with 56 subcarriers used but 64 total subcarriers -> subcarrier freq spaced by 0.3125MHz
                 ###Calculate subcarrier frequencies
                 if i < 28:
                     f = freq - (20.0 / 64) * (28 - i)
@@ -211,12 +210,13 @@ while loops < n:
 	    
     y = len(TestData)
     print(y)
+    
+    ###If there are less than 217 values in TestData, discard this sample
     if y == 217:
-        ###Check for large values in data and discard entire dataset if true
+        ###If there are large values in data, discard this sample
         flag = 0
         for x in TestData:
             if (x > 10 or x == float('Inf') or x == -float('Inf')):
-                #print(x)
                 flag = 1
                 break            
         if flag == 1:
