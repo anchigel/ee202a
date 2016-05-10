@@ -2,6 +2,7 @@ import numpy as np
 from sklearn import svm, neighbors
 from sklearn.metrics import accuracy_score
 import sys
+import cv2
 
 ################################################################################################
 ### USAGE:
@@ -61,6 +62,10 @@ testing_data = np.vstack((tmp4,tmp3))
 
 ###Fit training data to target
 clf.fit(training_data,target)
+#knn = cv2.ml.KNearest_create()
+#knn.train(training_data, cv2.ml.ROW_SAMPLE, target)
+#ret,result,neighbours,dist = knn.findNearest(testing_data,k=5)
+#print(result)
 
 ###Make prediction on testing data
 x = clf.predict(testing_data)

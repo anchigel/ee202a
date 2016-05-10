@@ -209,7 +209,7 @@ while loops < n:
 	    tDfile = open('testFeatures.csv', 'a')
 	    
     y = len(TestData)
-    print(loops + ": " + str(y))
+    print(str(loops+1) + ": " + str(y))
     
     ###If there are less than 217 values in TestData, discard this sample
     if y == 217:
