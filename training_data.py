@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn import svm, neighbors
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 import sys
 import cv2
@@ -12,46 +13,39 @@ import cv2
 ### Example: python training_data.py 50 svm Test1
 #################################################################################################
 
-if len(sys.argv) < 4:
-    print("Usage: python training_data.py <num_samples> <classifier_type> <folder>")
-    print("Example: python training_data.py 50 svm Test1")
+if len(sys.argv) < 3:
+    print("Usage: python training_data.py <classifier_type> <folder>")
+    print("Example: python training_data.py svm Test1")
     sys.exit(1)
+
+###Load data from files, Merge/Split data into 2D arrays
+###Assuming equal number of samples for each dataset representing 0 and 1 person; data for 1 person is split into 5 files
+###testFeatures_0.csv contains 5 samples
+###testFeatures_(1-5).csv contains 10 samples each for a total of 50 samples (one person in room, standing in 5 different locations)
+data0 = np.loadtxt(sys.argv[2]+"/testFeatures_0.csv", delimiter=',')
 
 ###Percentage of data used for training
 training_part = 0.7
-train = int(sys.argv[1])*training_part
-#print(train)
+train = int(len(data0)*training_part)
 
 ###Target values
-tmp = np.array([0, 1])
-target = np.repeat(tmp,int(int(sys.argv[1])*training_part))
-#print(target)
+target_val = np.array(range(2))
+target = np.repeat(target_val,int(len(data0)*training_part))
 
-###Load data from files
-data0 = np.loadtxt(sys.argv[3]+"/testFeatures_0.csv", delimiter=',')
-data1_1 = np.loadtxt(sys.argv[3]+"/testFeatures_1.csv", delimiter=',')
-data1_2 = np.loadtxt(sys.argv[3]+"/testFeatures_2.csv", delimiter=',')
-data1_3 = np.loadtxt(sys.argv[3]+"/testFeatures_3.csv", delimiter=',')
-data1_4 = np.loadtxt(sys.argv[3]+"/testFeatures_4.csv", delimiter=',')
-data1_5 = np.loadtxt(sys.argv[3]+"/testFeatures_5.csv", delimiter=',')
-
-###Merge training data into a single 2D array
-tmp1 = np.vstack((data0[0:int(train)],data1_1[0:int(train)/5]))
-tmp2 = np.vstack((data1_2[0:int(train)/5],data1_3[0:int(train)/5]))
-tmp3 = np.vstack((data1_4[0:int(train)/5],data1_5[0:int(train)/5]))
-tmp4 = np.vstack((tmp1,tmp2))
-training_data = np.vstack((tmp4,tmp3)).astype(np.float32)
-
-###Merge testing data into a single 2D array
-tmp1 = np.vstack((data0[int(train):],data1_1[int(train)/5:]))
-tmp2 = np.vstack((data1_2[int(train)/5:],data1_3[int(train)/5:]))
-tmp3 = np.vstack((data1_4[int(train)/5:],data1_5[int(train)/5:]))
-tmp4 = np.vstack((tmp1,tmp2))
-testing_data = np.vstack((tmp4,tmp3)).astype(np.float32)
-
+for i in range(5):
+    tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_" + str(i+1) + ".csv", delimiter=',')
+    if i == 0:
+        training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)/5]))
+        testing_data = np.vstack((data0[int(train):],tmp_data[int(train)/5:]))
+    else:
+        training_data = np.vstack((training_data,tmp_data[0:int(train)/5]))
+        testing_data = np.vstack((testing_data,tmp_data[int(train)/5:]))
+        
+training_data = training_data.astype(np.float32)
+testing_data = testing_data.astype(np.float32)
 
 ###Determine algorithm to use & Fit training data to target & Make prediction on testing data
-if sys.argv[2] == 'svm':
+if sys.argv[1] == 'svm':
     ###SKLEARN
     sklearn_clf = svm.SVC(gamma=0.0001)
     sklearn_clf.fit(training_data,target)
@@ -67,9 +61,9 @@ if sys.argv[2] == 'svm':
     result = opencv_clf.predict(testing_data)
     opencv_result = result[1].ravel().astype(int)
     
-elif sys.argv[2] == 'knn':
+elif sys.argv[1] == 'knn':
     ###SKLEARN
-    sklearn_clf = neighbors.KNeighborsClassifier(n_neighbors=8)
+    sklearn_clf = neighbors.KNeighborsClassifier(weights='distance',n_neighbors=8)
     sklearn_clf.fit(training_data,target)
     x = sklearn_clf.predict(testing_data)
     
@@ -85,8 +79,8 @@ else:
     sys.exit(1)
 
 ###Print ground truth, prediction, and accuracy
-num_test = int(sys.argv[1])-int(int(sys.argv[1])*training_part)
-gnd_truth = np.repeat(tmp,num_test)
+num_test = len(data0)-int(len(data0)*training_part)
+gnd_truth = np.repeat(target_val,num_test)
 print("Ground Truth:         " + str(gnd_truth))
 
 print("Prediction (sklearn): " + str(x))
