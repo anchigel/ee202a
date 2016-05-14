@@ -3,8 +3,8 @@ import sys
 from time import sleep
 
 while True:
-    send(IP(dst='192.168.8.1')/UDP(dport=55555)/"hello")
-    #sleep(0.5)
+    send(IP(dst='192.168.8.100')/UDP(dport=55555)/"hello")
+    sleep(0.5)
     #p=sr1(IP(dst='192.168.8.1')/ICMP()/"hello1")
     #p.show()
 

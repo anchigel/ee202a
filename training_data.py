@@ -1,16 +1,15 @@
 import numpy as np
 from sklearn import svm, neighbors
-from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 import sys
 import cv2
 
 ################################################################################################
 ### USAGE:
-### Arguments: <num>: number of samples in each dataset, <type>: type of classifier algorithm, e.g. svm, knn
+### Arguments: <type>: type of classifier algorithm, e.g. svm, knn
 ### <folder>: folder in current directory that contains the testFeatures_x.csv files
-### python training_data.py <num> <type> <folder>
-### Example: python training_data.py 50 svm Test1
+### python training_data.py <type> <folder>
+### Example: python training_data.py svm Test1
 #################################################################################################
 
 if len(sys.argv) < 3:
@@ -32,14 +31,18 @@ train = int(len(data0)*training_part)
 target_val = np.array(range(2))
 target = np.repeat(target_val,int(len(data0)*training_part))
 
-for i in range(5):
+for i in range(2):
     tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_" + str(i+1) + ".csv", delimiter=',')
     if i == 0:
-        training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)/5]))
-        testing_data = np.vstack((data0[int(train):],tmp_data[int(train)/5:]))
+        training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)]))
+        #training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)/5]))
+        testing_data = np.vstack((data0[int(train):],tmp_data[int(train):]))
+        #testing_data = np.vstack((data0[int(train):],tmp_data[int(train)/5:]))
     else:
-        training_data = np.vstack((training_data,tmp_data[0:int(train)/5]))
-        testing_data = np.vstack((testing_data,tmp_data[int(train)/5:]))
+        training_data = np.vstack((training_data,tmp_data[0:int(train)]))
+        #training_data = np.vstack((training_data,tmp_data[0:int(train)/5]))
+        testing_data = np.vstack((testing_data,tmp_data[int(train):]))
+        #testing_data = np.vstack((testing_data,tmp_data[int(train)/5:]))
         
 training_data = training_data.astype(np.float32)
 testing_data = testing_data.astype(np.float32)
