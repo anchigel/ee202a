@@ -116,8 +116,8 @@ elif sys.argv[1] == 'dt':
     x = clf.predict(testing_data)
 else:
     print("Current algorithms available: svm, knn")
-    print("Usage: python training_data.py <num_samples> <classifier_type> <folder>")
-    print("Example: python training_data.py 50 svm Test1")
+    print("Usage: python training_data.py <classifier_type> <folder>")
+    print("Example: python training_data.py svm Test1")
     sys.exit(1)
 
 ###Print ground truth, prediction, and accuracy

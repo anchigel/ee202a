@@ -28,27 +28,39 @@ def take_difference(tmp_data):
     #print difference
     return difference
     
+num_dataset = 2
+
 tmp_data = np.loadtxt(sys.argv[1]+"/testFeatures_0.csv", delimiter=',')
 tmp_data1 = np.loadtxt(sys.argv[1]+"/testFeatures_1.csv", delimiter=',')
-#tmp_data2 = np.loadtxt(sys.argv[1]+"/testFeatures_2.csv", delimiter=',')
-#tmp_data3 = np.loadtxt(sys.argv[1]+"/testFeatures_3.csv", delimiter=',')
+if num_dataset == 3:
+    tmp_data2 = np.loadtxt(sys.argv[1]+"/testFeatures_3.csv", delimiter=',')
 
+take_diff_once = True
+take_diff_twice = False
 
-difference = take_difference(tmp_data)
-diff_2 = take_difference(difference)
-tmp_data = np.vstack((tmp_data,difference))
-tmp_data = np.vstack((tmp_data,diff_2))
-
-difference = take_difference(tmp_data1)
-diff_2 = take_difference(difference)
-tmp_data1 = np.vstack((tmp_data1,difference))
-tmp_data1 = np.vstack((tmp_data1,diff_2))
-
+if take_diff_once:
+    difference = take_difference(tmp_data)
+    tmp_data = np.vstack((tmp_data,difference))
+    difference1 = take_difference(tmp_data1)
+    tmp_data1 = np.vstack((tmp_data1,difference1))
+    if num_dataset == 3:
+        difference2 = take_difference(tmp_data2)
+        tmp_data2 = np.vstack((tmp_data2,difference2))
+        
+if take_diff_once and take_diff_twice:
+    diff_2_1 = take_difference(difference)
+    tmp_data = np.vstack((tmp_data,diff_2_1))
+    diff_2_2 = take_difference(difference1)
+    tmp_data1 = np.vstack((tmp_data1,diff_2_2))
+    if num_dataset == 3:
+        diff_2_3 = take_difference(difference2)
+        tmp_data2 = np.vstack((tmp_data2,diff_2_3))
+        
 training_data = np.vstack((tmp_data,tmp_data1))
-#training_data = np.vstack((training_data,tmp_data2))
-#training_data = np.vstack((training_data,tmp_data3))
+if num_dataset == 3:
+    training_data = np.vstack((training_data,tmp_data2))
 
-target = np.repeat(np.array(range(2)),len(tmp_data))
+target = np.repeat(np.array(range(num_dataset)),len(tmp_data))
 target = np.vstack(target)
 
 DS = ClassificationDataSet(217)
