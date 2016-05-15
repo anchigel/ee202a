@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn import svm, neighbors
 from sklearn.metrics import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.cross_validation import cross_val_score
 import sys
 import cv2
 
@@ -17,35 +19,67 @@ if len(sys.argv) < 3:
     print("Example: python training_data.py svm Test1")
     sys.exit(1)
 
+#for i in range(5):
+#    tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_" + str(i+1) + ".csv", delimiter=',')
+#    if i == 0:
+        #training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)]))
+#        training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)/5]))
+        #testing_data = np.vstack((data0[int(train):],tmp_data[int(train):]))
+#        testing_data = np.vstack((data0[int(train):],tmp_data[int(train)/5:]))
+#    else:
+        #training_data = np.vstack((training_data,tmp_data[0:int(train)]))
+#        training_data = np.vstack((training_data,tmp_data[0:int(train)/5]))
+        #testing_data = np.vstack((testing_data,tmp_data[int(train):]))
+#        testing_data = np.vstack((testing_data,tmp_data[int(train)/5:]))
+        
+def take_difference(tmp_data):
+    for i,data in enumerate(tmp_data):
+        if i == 1:
+            difference = np.subtract(tmp_data[i-1],tmp_data[i])
+        elif i > 1:
+            diff = np.subtract(tmp_data[i-1],tmp_data[i])
+            difference = np.vstack((difference,diff))
+    #print difference
+    return difference
+
 ###Load data from files, Merge/Split data into 2D arrays
-###Assuming equal number of samples for each dataset representing 0 and 1 person; data for 1 person is split into 5 files
-###testFeatures_0.csv contains 5 samples
-###testFeatures_(1-5).csv contains 10 samples each for a total of 50 samples (one person in room, standing in 5 different locations)
-data0 = np.loadtxt(sys.argv[2]+"/testFeatures_0.csv", delimiter=',')
+
+###Magnitudes
+tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_0.csv", delimiter=',')
+tmp_data1 = np.loadtxt(sys.argv[2]+"/testFeatures_1.csv", delimiter=',')
 
 ###Percentage of data used for training
 training_part = 0.7
-train = int(len(data0)*training_part)
+train = int(len(tmp_data)*training_part)
 
+testing_data = np.vstack((tmp_data[int(train):],tmp_data1[int(train):]))
+
+###Difference of the magnitudes
+difference = take_difference(tmp_data[0:int(train)])
+tmp_data = np.vstack((tmp_data[0:int(train)],difference))
+difference1 = take_difference(tmp_data1[0:int(train)])
+tmp_data1 = np.vstack((tmp_data1[0:int(train)],difference1))
+
+training_data = np.vstack((tmp_data,tmp_data1))
+#print len(training_data)
 ###Target values
 target_val = np.array(range(2))
-target = np.repeat(target_val,int(len(data0)*training_part))
+target = np.repeat(target_val,int(len(tmp_data)))
+#print len(target)
+#tmp_data1 = np.loadtxt(sys.argv[2]+"/testFeatures_2.csv", delimiter=',')
+#tmp_data2 = np.loadtxt(sys.argv[2]+"/testFeatures_3.csv", delimiter=',')
 
-for i in range(2):
-    tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_" + str(i+1) + ".csv", delimiter=',')
-    if i == 0:
-        training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)]))
-        #training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)/5]))
-        testing_data = np.vstack((data0[int(train):],tmp_data[int(train):]))
-        #testing_data = np.vstack((data0[int(train):],tmp_data[int(train)/5:]))
-    else:
-        training_data = np.vstack((training_data,tmp_data[0:int(train)]))
-        #training_data = np.vstack((training_data,tmp_data[0:int(train)/5]))
-        testing_data = np.vstack((testing_data,tmp_data[int(train):]))
-        #testing_data = np.vstack((testing_data,tmp_data[int(train)/5:]))
-        
-training_data = training_data.astype(np.float32)
-testing_data = testing_data.astype(np.float32)
+#training_data = np.vstack((tmp_data,tmp_data1))
+#training_data = np.vstack((training_data,tmp_data2[0:int(train)]))
+#training_data = np.vstack((tmp_data_features1,tmp_data_features1))
+#training_data = np.vstack((difference,difference1))
+
+#difference = take_difference(tmp_data[int(train):])
+#tmp_data_features = np.vstack((tmp_data[int(train):],difference))
+#difference1 = take_difference(tmp_data1[int(train):])
+#tmp_data_features1 = np.vstack((tmp_data1[int(train):],difference1))
+#testing_data = np.vstack((tmp_data_features,tmp_data_features1))
+#testing_data = np.vstack((difference,difference1))
 
 ###Determine algorithm to use & Fit training data to target & Make prediction on testing data
 if sys.argv[1] == 'svm':
@@ -55,26 +89,31 @@ if sys.argv[1] == 'svm':
     x = sklearn_clf.predict(testing_data)
     
     ###OPENCV
-    opencv_clf = cv2.ml.SVM_create()
-    opencv_clf.setKernel(cv2.ml.SVM_RBF)
-    opencv_clf.setType(cv2.ml.SVM_NU_SVC)
-    opencv_clf.setNu(0.1)
-    opencv_clf.setGamma(0.0001)
-    opencv_clf.train(training_data, cv2.ml.ROW_SAMPLE, target)
-    result = opencv_clf.predict(testing_data)
-    opencv_result = result[1].ravel().astype(int)
+    #opencv_clf = cv2.ml.SVM_create()
+    #opencv_clf.setKernel(cv2.ml.SVM_RBF)
+    #opencv_clf.setType(cv2.ml.SVM_NU_SVC)
+    #opencv_clf.setNu(0.1)
+    #opencv_clf.setGamma(0.0001)
+    #opencv_clf.train(training_data, cv2.ml.ROW_SAMPLE, target)
+    #result = opencv_clf.predict(testing_data)
+    #opencv_result = result[1].ravel().astype(int)
     
 elif sys.argv[1] == 'knn':
     ###SKLEARN
-    sklearn_clf = neighbors.KNeighborsClassifier(weights='distance',n_neighbors=8)
+    sklearn_clf = neighbors.KNeighborsClassifier(weights='uniform', n_neighbors=7)
     sklearn_clf.fit(training_data,target)
     x = sklearn_clf.predict(testing_data)
     
     ###OPENCV
-    opencv_clf = cv2.ml.KNearest_create()
-    opencv_clf.train(training_data, cv2.ml.ROW_SAMPLE, target)
-    ret,result,neighbours,dist = opencv_clf.findNearest(testing_data,k=8)
-    opencv_result = result.ravel().astype(int)
+    #opencv_clf = cv2.ml.KNearest_create()
+    #opencv_clf.train(training_data, cv2.ml.ROW_SAMPLE, target)
+    #ret,result,neighbours,dist = opencv_clf.findNearest(testing_data,k=8)
+    #opencv_result = result.ravel().astype(int)
+elif sys.argv[1] == 'dt':
+    clf = DecisionTreeClassifier(random_state = 0)
+    print(cross_val_score(clf, training_data, target, cv=10))
+    clf.fit(training_data,target)
+    x = clf.predict(testing_data)
 else:
     print("Current algorithms available: svm, knn")
     print("Usage: python training_data.py <num_samples> <classifier_type> <folder>")
@@ -82,14 +121,14 @@ else:
     sys.exit(1)
 
 ###Print ground truth, prediction, and accuracy
-num_test = len(data0)-int(len(data0)*training_part)
+num_test = int(len(testing_data)/2)
 gnd_truth = np.repeat(target_val,num_test)
-print("Ground Truth:         " + str(gnd_truth))
+print("Ground Truth: " + str(gnd_truth))
 
-print("Prediction (sklearn): " + str(x))
+print("Prediction  : " + str(x))
 accuracy = accuracy_score(gnd_truth,x)
-print("Accuracy (sklearn): " + str(accuracy))
+print("Accuracy: " + str(accuracy))
 
-print("Prediction (opencv):  " + str(opencv_result))
-accuracy1 = accuracy_score(gnd_truth,opencv_result)
-print("Accuracy (opencv): " + str(accuracy1))
+#print("Prediction (opencv):  " + str(opencv_result))
+#accuracy1 = accuracy_score(gnd_truth,opencv_result)
+#print("Accuracy (opencv): " + str(accuracy1))
