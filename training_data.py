@@ -3,6 +3,8 @@ from sklearn import svm, neighbors
 from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.cross_validation import cross_val_score
+from sklearn.cluster import KMeans
+from matplotlib import pyplot
 import sys
 import cv2
 
@@ -103,6 +105,28 @@ elif sys.argv[1] == 'dt':
     print(cross_val_score(clf, training_data, target, cv=10))
     clf.fit(training_data,target)
     x = clf.predict(testing_data)
+elif sys.argv[1] == 'kmeans':
+    kmeans = KMeans(n_clusters=len(sys.argv)-3)
+    kmeans.fit(training_data,target)
+    x = kmeans.predict(testing_data)
+    
+    labels = kmeans.labels_
+    centroids = kmeans.cluster_centers_
+    
+    for i in range(len(sys.argv)-3):
+        # select only data observations with cluster label == i
+        ds = training_data[np.where(labels==i)]
+        # plot the data observations
+        dot1, = pyplot.plot(ds[:,0],ds[:,1],'o')
+        leg = pyplot.legend(handle=dot1, ["Dots"])
+        ax = pyplot.gca().add_artist(leg)
+        # plot the centroids
+        lines = pyplot.plot(centroids[i,0],centroids[i,1],'kx')
+        # make the centroid x's bigger
+        pyplot.setp(lines,ms=15.0)
+        pyplot.setp(lines,mew=2.0)
+    pyplot.show()
+    
 else:
     print("Current algorithms available: svm, knn")
     print("Usage: python training_data.py <classifier_type> <folder>")
