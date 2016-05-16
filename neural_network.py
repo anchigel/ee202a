@@ -9,13 +9,14 @@ from pybrain.utilities           import percentError
 ################################################################################################
 ### USAGE:
 ### Arguments: <folder>: folder in current directory that contains the testFeatures_x.csv files
-### python training_data.py <folder>
-### Example: python training_data.py TestFeatures_16_0_smples
+###            <numX>: file number
+### python training_data.py <folder> <num1> <num2> <optional: num3>
+### Example: python training_data.py TestFeatures_16_0_smples 0 1
 #################################################################################################
 
-if len(sys.argv) < 2:
-    print("Usage: python training_data.py <folder>")
-    print("Example: python training_data.py TestFeatures_16_0_smples")
+if len(sys.argv) < 4:
+    print("Usage: python training_data.py <folder> <num1> <num2> <optional: num3>")
+    print("Example: python training_data.py TestFeatures_16_0_smples 0 1")
     sys.exit(1)
 
 def take_difference(tmp_data):
@@ -27,15 +28,13 @@ def take_difference(tmp_data):
             difference = np.vstack((difference,diff))
     #print difference
     return difference
-    
-num_dataset = 2
 
-tmp_data = np.loadtxt(sys.argv[1]+"/testFeatures_0.csv", delimiter=',')
-tmp_data1 = np.loadtxt(sys.argv[1]+"/testFeatures_1.csv", delimiter=',')
-if num_dataset == 3:
-    tmp_data2 = np.loadtxt(sys.argv[1]+"/testFeatures_3.csv", delimiter=',')
+tmp_data = np.loadtxt(sys.argv[1]+"/testFeatures_" + sys.argv[2] + ".csv", delimiter=',')
+tmp_data1 = np.loadtxt(sys.argv[1]+"/testFeatures_" + sys.argv[3] + ".csv", delimiter=',')
+if len(sys.argv) > 4:
+    tmp_data2 = np.loadtxt(sys.argv[1]+"/testFeatures_" + sys.argv[4] + ".csv", delimiter=',')
 
-take_diff_once = True
+take_diff_once = False
 take_diff_twice = False
 
 if take_diff_once:
@@ -43,7 +42,7 @@ if take_diff_once:
     tmp_data = np.vstack((tmp_data,difference))
     difference1 = take_difference(tmp_data1)
     tmp_data1 = np.vstack((tmp_data1,difference1))
-    if num_dataset == 3:
+    if len(sys.argv) > 4:
         difference2 = take_difference(tmp_data2)
         tmp_data2 = np.vstack((tmp_data2,difference2))
         
@@ -52,15 +51,15 @@ if take_diff_once and take_diff_twice:
     tmp_data = np.vstack((tmp_data,diff_2_1))
     diff_2_2 = take_difference(difference1)
     tmp_data1 = np.vstack((tmp_data1,diff_2_2))
-    if num_dataset == 3:
+    if len(sys.argv) > 4:
         diff_2_3 = take_difference(difference2)
         tmp_data2 = np.vstack((tmp_data2,diff_2_3))
         
 training_data = np.vstack((tmp_data,tmp_data1))
-if num_dataset == 3:
+if len(sys.argv) > 4:
     training_data = np.vstack((training_data,tmp_data2))
 
-target = np.repeat(np.array(range(num_dataset)),len(tmp_data))
+target = np.repeat(np.array(range(len(sys.argv)-2)),len(tmp_data))
 target = np.vstack(target)
 
 DS = ClassificationDataSet(217)

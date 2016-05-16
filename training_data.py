@@ -10,28 +10,16 @@ import cv2
 ### USAGE:
 ### Arguments: <type>: type of classifier algorithm, e.g. svm, knn
 ### <folder>: folder in current directory that contains the testFeatures_x.csv files
-### python training_data.py <type> <folder>
-### Example: python training_data.py svm Test1
+### python training_data.py <type> <folder> <file num1> <file num2> <optional: file num3>
+### Example: python training_data.py svm Test1 0 1
 #################################################################################################
 
-if len(sys.argv) < 3:
-    print("Usage: python training_data.py <classifier_type> <folder>")
-    print("Example: python training_data.py svm Test1")
+if len(sys.argv) < 5:
+    print("Usage: python training_data.py <classifier_type> <folder> <file num1> <file num2> <optional: file num3>")
+    print("Example: python training_data.py svm Test1 0 1")
     sys.exit(1)
 
-#for i in range(5):
-#    tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_" + str(i+1) + ".csv", delimiter=',')
-#    if i == 0:
-        #training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)]))
-#        training_data = np.vstack((data0[0:int(train)],tmp_data[0:int(train)/5]))
-        #testing_data = np.vstack((data0[int(train):],tmp_data[int(train):]))
-#        testing_data = np.vstack((data0[int(train):],tmp_data[int(train)/5:]))
-#    else:
-        #training_data = np.vstack((training_data,tmp_data[0:int(train)]))
-#        training_data = np.vstack((training_data,tmp_data[0:int(train)/5]))
-        #testing_data = np.vstack((testing_data,tmp_data[int(train):]))
-#        testing_data = np.vstack((testing_data,tmp_data[int(train)/5:]))
-        
+      
 def take_difference(tmp_data):
     for i,data in enumerate(tmp_data):
         if i == 1:
@@ -45,41 +33,42 @@ def take_difference(tmp_data):
 ###Load data from files, Merge/Split data into 2D arrays
 
 ###Magnitudes
-tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_0.csv", delimiter=',')
-tmp_data1 = np.loadtxt(sys.argv[2]+"/testFeatures_1.csv", delimiter=',')
+tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_" + sys.argv[3] + ".csv", delimiter=',')
+tmp_data1 = np.loadtxt(sys.argv[2]+"/testFeatures_" + sys.argv[4] + ".csv", delimiter=',')
+if len(sys.argv) > 5:
+    tmp_data2 = np.loadtxt(sys.argv[2]+"/testFeatures_" + sys.argv[5] + ".csv", delimiter=',')
 
 ###Percentage of data used for training
 training_part = 0.7
 train = int(len(tmp_data)*training_part)
 
 testing_data = np.vstack((tmp_data[int(train):],tmp_data1[int(train):]))
+if len(sys.argv) > 5:
+    testing_data = np.vstack((testing_data,tmp_data2[int(train):]))
 
 ###Difference of the magnitudes
-difference = take_difference(tmp_data[0:int(train)])
-tmp_data = np.vstack((tmp_data[0:int(train)],difference))
-difference1 = take_difference(tmp_data1[0:int(train)])
-tmp_data1 = np.vstack((tmp_data1[0:int(train)],difference1))
-
+take_diff = False
+if take_diff:
+    difference = take_difference(tmp_data[0:int(train)])
+    tmp_data = np.vstack((tmp_data[0:int(train)],difference))
+    difference1 = take_difference(tmp_data1[0:int(train)])
+    tmp_data1 = np.vstack((tmp_data1[0:int(train)],difference1))
+    if len(sys.argv) > 5:
+        difference2 = take_difference(tmp_data2[0:int(train)])
+        tmp_data2 = np.vstack((tmp_data2[0:int(train)],difference2))
+else:
+    tmp_data = tmp_data[0:int(train)]
+    tmp_data1 = tmp_data1[0:int(train)]
+    if len(sys.argv) > 5:
+        tmp_data2 = tmp_data2[0:int(train)]
+    
 training_data = np.vstack((tmp_data,tmp_data1))
+if len(sys.argv) > 5:
+    training_data = np.vstack((training_data,tmp_data2))
 #print len(training_data)
 ###Target values
-target_val = np.array(range(2))
+target_val = np.array(range(len(sys.argv)-3))
 target = np.repeat(target_val,int(len(tmp_data)))
-#print len(target)
-#tmp_data1 = np.loadtxt(sys.argv[2]+"/testFeatures_2.csv", delimiter=',')
-#tmp_data2 = np.loadtxt(sys.argv[2]+"/testFeatures_3.csv", delimiter=',')
-
-#training_data = np.vstack((tmp_data,tmp_data1))
-#training_data = np.vstack((training_data,tmp_data2[0:int(train)]))
-#training_data = np.vstack((tmp_data_features1,tmp_data_features1))
-#training_data = np.vstack((difference,difference1))
-
-#difference = take_difference(tmp_data[int(train):])
-#tmp_data_features = np.vstack((tmp_data[int(train):],difference))
-#difference1 = take_difference(tmp_data1[int(train):])
-#tmp_data_features1 = np.vstack((tmp_data1[int(train):],difference1))
-#testing_data = np.vstack((tmp_data_features,tmp_data_features1))
-#testing_data = np.vstack((difference,difference1))
 
 ###Determine algorithm to use & Fit training data to target & Make prediction on testing data
 if sys.argv[1] == 'svm':
@@ -121,7 +110,7 @@ else:
     sys.exit(1)
 
 ###Print ground truth, prediction, and accuracy
-num_test = int(len(testing_data)/2)
+num_test = int(len(testing_data)/(len(sys.argv)-3))
 gnd_truth = np.repeat(target_val,num_test)
 print("Ground Truth: " + str(gnd_truth))
 
