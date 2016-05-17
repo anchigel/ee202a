@@ -58,9 +58,23 @@ if take_diff_once and take_diff_twice:
 training_data = np.vstack((tmp_data,tmp_data1))
 if len(sys.argv) > 4:
     training_data = np.vstack((training_data,tmp_data2))
+    
+use_diff_only = False
 
-target = np.repeat(np.array(range(len(sys.argv)-2)),len(tmp_data))
-target = np.vstack(target)
+if use_diff_only:
+    training_data = np.vstack((difference,difference1))
+if use_diff_only and len(sys.argv) > 4:
+    diff_stack = np.vstack((diff_2_1,diff_2_2))  
+    training_data = np.vstack((training_data,diff_stack))    
+
+if use_diff_only:
+    target = np.repeat(np.array(range(len(sys.argv)-2)),len(difference))
+    target = np.vstack(target)
+else:
+    target = np.repeat(np.array(range(len(sys.argv)-2)),len(tmp_data))
+    target = np.vstack(target)
+
+
 
 DS = ClassificationDataSet(217)
 assert(training_data.shape[0] == target.shape[0])
@@ -81,6 +95,6 @@ ret = rnn.activateOnDataset(tstdata)
 #print(tstdata['target'].transpose())
 #print (trainer.testOnClassData())
 #print 'Percent Error on Test dataset: ' , percentError(rnn.activateOnDataset(tstdata),tstdata['target'])
-print 'Percent Error on Test dataset: ' , percentError(trainer.testOnClassData(tstdata), tstdata['target'] )
+print 'Percent Error on Test dataset: ' , percentError(trainer.testOnClassData(tstdata, verbose=True), tstdata['target'] )
 print 'Percent Error on Training dataset: ' , percentError(trainer.testOnClassData(trndata), trndata['target'] )
 exit(0)
