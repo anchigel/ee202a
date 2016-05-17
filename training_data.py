@@ -4,7 +4,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.cross_validation import cross_val_score
 from sklearn.cluster import KMeans
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 import sys
 import cv2
 
@@ -117,18 +117,26 @@ elif sys.argv[1] == 'kmeans':
         # select only data observations with cluster label == i
         ds = training_data[np.where(labels==i)]
         # plot the data observations
-        dot1, = pyplot.plot(ds[:,0],ds[:,1],'o')
-        leg = pyplot.legend(handle=dot1, ["Dots"])
-        ax = pyplot.gca().add_artist(leg)
+        if i==0:
+            dot1, = plt.plot(ds[:,0],ds[:,1],'o')
+        elif i==1:
+            dot2, = plt.plot(ds[:,0],ds[:,1],'o')
+        elif i==2:
+            dot3, = plt.plot(ds[:,0],ds[:,1],'o')
         # plot the centroids
-        lines = pyplot.plot(centroids[i,0],centroids[i,1],'kx')
+        lines = plt.plot(centroids[i,0],centroids[i,1],'kx')
         # make the centroid x's bigger
-        pyplot.setp(lines,ms=15.0)
-        pyplot.setp(lines,mew=2.0)
-    pyplot.show()
+        plt.setp(lines,ms=15.0)
+        plt.setp(lines,mew=2.0)
+    if (len(sys.argv)-3) == 3:
+        leg = plt.legend([dot1, dot2, dot3], [sys.argv[3],sys.argv[4],sys.argv[5]])
+    else:
+        leg = plt.legend([dot1, dot2], [sys.argv[3],sys.argv[4]])
+    ax = plt.gca().add_artist(leg)
+    plt.show()
     
 else:
-    print("Current algorithms available: svm, knn")
+    print("Current algorithms available: svm, knn, dt, kmeans")
     print("Usage: python training_data.py <classifier_type> <folder>")
     print("Example: python training_data.py svm Test1")
     sys.exit(1)
