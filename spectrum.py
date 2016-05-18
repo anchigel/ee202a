@@ -55,15 +55,21 @@ scatter, = ax.plot([2401, 2472], [-135, 15], 'r')
 
 scatter_min, = ax.plot([], [], 'b')
 scatter_max, = ax.plot([], [], 'g')
+
+
+fig2 = plt.figure()
+ax2 = fig2.add_subplot(111)
+scatter2, = ax2.plot([0,16], [-135, 15], 'r')
+
 plt.show()
 plt.grid(True)
 
 #print "time,freq,signal"
 
 ###SSH into router
-client = paramiko.SSHClient()
-client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect("192.168.8.1", username='root', password='myRouter')
+#client = paramiko.SSHClient()
+#client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#client.connect("192.168.8.1", username='root', password='myRouter')
 
 ###Output file name
 if len(sys.argv) >= 2:
@@ -73,8 +79,8 @@ else:
     open('testFeatures.csv', 'w').close()
 
 ###Run commands on router to began spectral scanning
-stdin, stdout, stderr = client.exec_command('echo 1 > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_count')
-stdin, stdout, stderr = client.exec_command('echo chanscan > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_scan_ctl')
+#stdin, stdout, stderr = client.exec_command('echo 16 > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_count')
+#stdin, stdout, stderr = client.exec_command('echo chanscan > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_scan_ctl')
 
 ###Determine number of samples to collect
 loops = 0
@@ -88,11 +94,11 @@ while loops < n:
     
     ###Run commands on router to get channel info and transfer file using scp
     #stdin, stdout, stderr = client.exec_command('./run.sh')
-    stdin, stdout, stderr = client.exec_command('iw dev wlan0 scan')
-    stdin, stdout, stderr = client.exec_command('cat /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_scan0 > samples')
+    ##stdin, stdout, stderr = client.exec_command('iw dev wlan0 scan')
+    ##stdin, stdout, stderr = client.exec_command('cat /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_scan0 > samples')
     #stdin, stdout, stderr = client.exec_command('echo disable > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_scan_ctl')    
-    with SCPClient(client.get_transport()) as scp:
-        scp.get('samples')
+    ##with SCPClient(client.get_transport()) as scp:
+        #scp.get('samples')
 
     with open("samples", "rb") as file:
 
@@ -114,7 +120,7 @@ while loops < n:
                 print "only 20MHz supported atm"
                 sys.exit(1)
 
-            ### metadata
+            ### metadatanumpy.nan
             max_exp, freq, rssi, noise, max_magnitude, max_index, bitmap_weight, tsf = struct.unpack('>BHbbHBBQ', data[3:20])
 
             #print "max_exp: "       + str(max_exp)
@@ -176,10 +182,60 @@ while loops < n:
             data = file.read(76)
             
         ###End of processing one frame in 'samples'
-
+        data = [[] for k in xrange(217)]
+        
+        
+        def determine_index(freq):
+            return (freq-2403.25)/0.3125
+        
+        for i,(frequency,value) in enumerate(zip(x,y)):
+            ind = determine_index(frequency)
+            data[int(ind)].append(value)
+                
+                
+                
+        def moving_average(a, n=3):
+            ret = np.cumsum(a, dtype=float)
+            ret[n:] = ret[n:] - ret[:-n]
+            return ret[n - 1:] / n
+        
+        def plot_subcarrier(values):
+            scatter2.set_xdata(range(len(values)))
+            scatter2.set_ydata(10.0 * np.log10(values))
+            fig2.canvas.draw()
+            raw_input("Hit enter to continue:")
+        
+        def plot_mov_avg(values):
+            mov_avg = moving_average(values)
+            #scatter2.set_xdata(range(len(mov_avg)))
+            #scatter2.set_ydata(10.0 * np.log10(mov_avg))
+            #fig2.canvas.draw()
+            for i,val in enumerate(mov_avg):
+                if i < 14:
+                    if i < 13:
+                        fd.write(str(10.0 * np.log10(val)) + ',')
+                    else:
+                        fd.write(str(10.0 * np.log10(val)))
+                else:
+                    break
+            fd.write('\n')
+            #sleep(0.1)
+            #raw_input("Hit enter to continue:")
+        
+        #TODO: Write subcarrier magnitudes to file
+        
+        fd = open("moving_average_" + sys.argv[1] + "_" + str(loops) + ".csv",'w')
+        for i in range(217):
+            plot_mov_avg(data[i])  
+        fd.close()   
+        
         df = pd.DataFrame(np.matrix([x, y]).T, columns = ["freq", "rssi"])
         group = df.groupby('freq')
+        #count = group.count()
+        #np.savetxt('count.txt', count)
+        
         spectrum = group.mean()
+        #print spectrum
         spectrum_min = group.min()
         spectrum_max = group.max()
 
@@ -199,8 +255,6 @@ while loops < n:
         scatter_max.set_xdata(spectrum_max.index)
         scatter_max.set_ydata([10.0 * np.log10(val) for val in spectrum_max['rssi']])
         fig.canvas.draw()
-        
-    ###End of processing one 'samples' file
     
     ###Append data from 'samples' to csv file
     if len(sys.argv) >= 2:
@@ -234,6 +288,8 @@ while loops < n:
     
     ###Save data to .mat file
     #sio.savemat('data.mat', mdict={'data_array': data_array})
+    
+    ###End of processing one 'samples' file
     
 ###End of while loop
 

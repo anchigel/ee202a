@@ -7,6 +7,7 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import sys
 import cv2
+from numpy import linalg as LA
 
 ################################################################################################
 ### USAGE:
@@ -39,6 +40,35 @@ tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_" + sys.argv[3] + ".csv", delim
 tmp_data1 = np.loadtxt(sys.argv[2]+"/testFeatures_" + sys.argv[4] + ".csv", delimiter=',')
 if len(sys.argv) > 5:
     tmp_data2 = np.loadtxt(sys.argv[2]+"/testFeatures_" + sys.argv[5] + ".csv", delimiter=',')
+
+###Moving Average
+mov_avg0_0 = np.loadtxt(sys.argv[2]+"/moving_average_" + sys.argv[3] + "_0.csv", delimiter=',')
+mov_avg0_1 = np.loadtxt(sys.argv[2]+"/moving_average_" + sys.argv[3] + "_1.csv", delimiter=',')
+#mov_avg1_0 = np.loadtxt(sys.argv[2]+"/moving_average_" + sys.argv[4] + "_0.csv", delimiter=',')
+#mov_avg1_1 = np.loadtxt(sys.argv[2]+"/moving_average_" + sys.argv[4] + "_1.csv", delimiter=',')
+#mov_avg2_0 = np.loadtxt(sys.argv[2]+"/moving_average_" + sys.argv[5] + "_0.csv", delimiter=',')
+#mov_avg2_1 = np.loadtxt(sys.argv[2]+"/moving_average_" + sys.argv[5] + "_1.csv", delimiter=',')
+
+
+##############################################################################################################
+
+#Calculate covariance & max eigenvalues for moving average - time
+max_eig = []
+for n in range(len(mov_avg0_0)):
+    cov1 = np.cov(mov_avg0_0[n],mov_avg0_1[n])
+    max_eig.append(max(LA.eigvals(cov1)))
+
+print max_eig
+
+#TODO: Calculate covariance & max eigenvalues for moving average - freq
+
+
+#TODO: Calculate covariance & max eigenvalues for subcarrier magnitude - time
+
+
+#TODO: Calculate covariance & max eigenvalues for - freq
+
+##############################################################################################################
 
 ###Percentage of data used for training
 training_part = 0.7
