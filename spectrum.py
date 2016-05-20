@@ -16,23 +16,22 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-################################################################################################
+##########################################################################################################
 ### USAGE:
 ### For training purposes: <ending filename>: string to be appended to the filename 
 ###                        <num samples>: number of samples to be collected
-### python spectrum.py <ending filename> <num samples> 
-### Example: python spectrum.py 0 50
-###     Output file will be testFeatures_0.csv with 50 samples within the file
-###
-### Without any arguments, output file will be testFeatures.csv with at most 100 samples
-### python spectrum.py 
-###
-################################################################################################
+### python spectrum.py <folder> <ending filename> <num samples> 
+### Example: python spectrum.py Exp1 0 50
+###     Output files will include moving_average_X.csv with 50 samples within the file, samples_X
+###         X: 0 to (num samples)
+###     All located in folder Exp1
+##########################################################################################################
 
 import array
 import struct
 import sys
 import time
+import os
 
 from subprocess import call
 
@@ -67,16 +66,21 @@ plt.grid(True)
 #print "time,freq,signal"
 
 ###SSH into router
-#client = paramiko.SSHClient()
-#client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-#client.connect("192.168.8.1", username='root', password='myRouter')
+client = paramiko.SSHClient()
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+client.connect("192.168.8.1", username='root', password='myRouter')
 
 ###Output file name
-if len(sys.argv) >= 2:
-    file_name = 'testFeatures_' + sys.argv[1] + '.csv'
-    open(file_name, 'w').close()
-else:
-    open('testFeatures.csv', 'w').close()
+if len(sys.argv) < 4:
+    print("python spectrum.py <folder> <ending filename> <num samples>")
+    print("Example: python spectrum.py Exp1 0 50")
+    sys.exit(1)
+
+if not os.path.exists(sys.argv[1]):
+    os.makedirs(sys.argv[1])
+
+file_name = sys.argv[1] + '/testFeatures_' + sys.argv[2] + '.csv'
+open(file_name, 'w').close()
 
 ###Run commands on router to began spectral scanning
 stdin, stdout, stderr = client.exec_command('echo 16 > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_count')
@@ -84,10 +88,7 @@ stdin, stdout, stderr = client.exec_command('echo chanscan > /sys/kernel/debug/i
 
 ###Determine number of samples to collect
 loops = 0
-if len(sys.argv) < 3:
-    n = 100
-else:
-    n = int(sys.argv[2])
+n = int(sys.argv[3])
 
 while loops < n:
     ### do measurement
@@ -132,10 +133,8 @@ while loops < n:
             for i, m in enumerate(measurements):
                 if m == 0 and max_exp == 0:
                     m = 1
-                
-                #v = 10.0**((rssi + 20.0 * np.log10(m << max_exp) - 10.0 * np.log10(squaresum))/10.0)
+
                 v = 10.0**((noise + rssi + 20.0 * np.log10(m << max_exp) - 10.0 * np.log10(squaresum))/10.0)
-                #v = noise + rssi + 20.0 * np.log10(m << max_exp) - 10.0 * np.log10(squaresum)
                 
                 ###20MHz channel with 56 subcarriers used but 64 total subcarriers -> subcarrier freq spaced by 0.3125MHz
                 ###Calculate subcarrier frequencies
@@ -150,15 +149,15 @@ while loops < n:
 
             data = file.read(76)
             
-        ###End of processing one frame in 'samples'
+        ###End of processing all frames in 'samples'
         subcarrier_data = [[] for k in xrange(217)]
         
+        ###Functions
         def determine_index(freq):
             return (freq-2403.25)/0.3125
         
-        for i,(frequency,value) in enumerate(zip(x,y)):
-            ind = determine_index(frequency)
-            subcarrier_data[int(ind)].append(value)
+        def determine_freq_from_index(ind):
+            return ind*0.3125+2403.25
                 
         def moving_average(a, n):
             ret = np.cumsum(a, dtype=float)
@@ -177,7 +176,6 @@ while loops < n:
             #scatter2.set_ydata(10.0 * np.log10(mov_avg))
             #fig2.canvas.draw()
             
-            numSamples = 16
             for i,val in enumerate(mov_avg):
                 if i < numSamples-(n-1):
                     if i < numSamples-(n-2):
@@ -189,22 +187,31 @@ while loops < n:
             fd.write('\n')
             #sleep(0.1)
             #raw_input("Hit enter to continue:")
+        ################################################################
+        
+        ###Place RSS values in row corresponding to its freq
+        for i,(frequency,value) in enumerate(zip(x,y)):
+            ind = determine_index(frequency)
+            subcarrier_data[int(ind)].append(value)      
         
         ###Check number of samples in each subcarrier freq
-        not_enough_samples = 0
+        ###If less than numSamples, throw out this 'samples' file
+        numSamples = 16
+        not_enough_samples = False
         for i in range(217):
-            if len(data[i] < 16)
-                not_enough_samples = 1
+            if len(subcarrier_data[i]) < numSamples:
+                print("Subcarrier freq length: " + str(len(subcarrier_data[i])) + " at freq: " + str(determine_freq_from_index(i)))
+                not_enough_samples = True
                 break
-        if not_enough_samples == 1
-            break
+        if not_enough_samples:
+            continue
         
         ###Write moving average values into file
-        fd = open("moving_average_" + sys.argv[1] + "_" + str(loops) + ".csv",'w')
+        fd = open(sys.argv[1] + "/moving_average_" + sys.argv[2] + "_" + str(loops) + ".csv",'w')
                    
         window_size = 3
         for i in range(217):
-            plot_mov_avg(data[i],window_size)  
+            plot_mov_avg(subcarrier_data[i],window_size)  
         fd.close()
                 
         ###Plot overall averaged spectrum
@@ -228,10 +235,7 @@ while loops < n:
         fig.canvas.draw()
     
     ###Append data from 'samples' to csv file
-    if len(sys.argv) >= 2:
-	    tDfile = open(file_name, 'a')
-    else:
-	    tDfile = open('testFeatures.csv', 'a')
+	tDfile = open(file_name, 'a')
 	    
     y = len(TestData)
     print(str(loops+1) + ": " + str(y))
@@ -239,12 +243,12 @@ while loops < n:
     ###If there are less than 217 values in TestData, discard this sample
     if y == 217:
         ###If there are large values in data, discard this sample
-        flag = 0
+        flag = False
         for x in TestData:
             if (x > 10 or x == float('Inf') or x == -float('Inf')):
-                flag = 1
+                flag = True
                 break            
-        if flag == 1:
+        if flag:
             continue
                 
         ###Data should be ok, write into file
@@ -255,14 +259,12 @@ while loops < n:
         tDfile.write('\n')	
         
         ###Save the samples file
-        copyfile('samples', 'samples_' + str(loops))
+        copyfile('samples', sys.argv[1] + '/samples_' + str(loops))
         loops = loops+1    
     ###End of processing one 'samples' file
     
 ###End of while loop
 
-fo.close()
+tDfile.close()
 scp.close()
 client.close()
-
-

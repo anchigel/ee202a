@@ -15,10 +15,10 @@ from time import sleep
 
 ################################################################################################
 ### USAGE:
-### Arguments: <type>: type of classifier algorithm, e.g. svm, knn
-### <folder>: folder in current directory that contains the testFeatures_x.csv files
-### python training_data.py <type> <folder> <file num1> <file num2> <optional: file num3>
-### Example: python training_data.py svm Test1 0 1
+### Arguments: <type>: type of classifier algorithm, e.g. svm, knn, dt, kmeans
+### <folder>: folder in current directory that contains the moving_average_x.csv files
+### python training_data.py <type> <folder> <file num1> <folder> <file num2> <folder> <file num3>
+### Example: python training_data.py svm Test1 0 Test2 1 Test3 2
 #################################################################################################
 
 if len(sys.argv) < 6:
@@ -36,19 +36,6 @@ def take_difference(tmp_data):
             difference = np.vstack((difference,diff))
     #print difference
     return difference
-    
-###Magnitudes
-#tmp_data = np.loadtxt(sys.argv[2]+"/testFeatures_" + sys.argv[3] + ".csv", delimiter=',')
-#tmp_data1 = np.loadtxt(sys.argv[2]+"/testFeatures_" + sys.argv[4] + ".csv", delimiter=',')
-#if len(sys.argv) > 5:
-#    tmp_data2 = np.loadtxt(sys.argv[2]+"/testFeatures_" + sys.argv[5] + ".csv", delimiter=',')
-
-###Load in files and calculate covariance & max eigenvalue, append to features 2D array
-###Time, nobody in room + 1 person static
-def moving_average(a, n=3):
-    ret = np.cumsum(a, dtype=float)
-    ret[n:] = ret[n:] - ret[:-n]
-    return ret[n - 1:] / n
 
 def plot_mov_avg(values):
     scatter.set_xdata(range(len(values)))
@@ -57,13 +44,14 @@ def plot_mov_avg(values):
     sleep(0.1)
     #raw_input("Hit enter to continue:")
     
+"""    
 plt.ion()
 fig = plt.figure()
 ax = fig.add_subplot(111)   
 scatter, = ax.plot([0,16], [-135, 10], 'r')
 plt.show()
 plt.grid(True)
-    
+"""
 loop = 0
 while loop < 1:
     loop = loop+1
@@ -74,8 +62,8 @@ while loop < 1:
         for k in range(217):
             plot_mov_avg(mov_avg0_0[k])
     """
+    ###Load in files and calculate covariance & max eigenvalue for same freq across samples, append to features 2D array
     samples = 15
-    #print "\nNumber of samples: " + str(samples) + "\n"
     for k in range(samples):
         mov_avg0_0 = np.loadtxt(sys.argv[2]+"/moving_average_" + sys.argv[3] + "_" + str(k) + ".csv", delimiter=',')
         mov_avg0_1 = np.loadtxt(sys.argv[2]+"/moving_average_" + sys.argv[3] + "_" + str(k+1) + ".csv", delimiter=',')
@@ -86,8 +74,7 @@ while loop < 1:
         if(len(sys.argv) > 7):
             mov_avg2_0 = np.loadtxt(sys.argv[6]+"/moving_average_" + sys.argv[7] + "_" + str(k) + ".csv", delimiter=',')
             mov_avg2_1 = np.loadtxt(sys.argv[6]+"/moving_average_" + sys.argv[7] + "_" + str(k+1) + ".csv", delimiter=',')
-        #print "mov_avg_0 " + str(len(mov_avg0_0))
-        #print "mov_avg_1 " + str(len(mov_avg0_1))
+
         max_eig_movavg_time_0 = []
         max_eig_movavg_time_1 = []
         max_eig_movavg_time_2 = []
@@ -101,6 +88,7 @@ while loop < 1:
             if(len(sys.argv) > 7):
                 cov2 = np.cov(mov_avg2_0[n],mov_avg2_1[n])
                 max_eig_movavg_time_2.append(max(LA.eigvals(cov2)))
+                
         if k == 0:
             features0_time = [max_eig_movavg_time_0]
             features1_time = [max_eig_movavg_time_1]
@@ -112,16 +100,13 @@ while loop < 1:
             if(len(sys.argv) > 7):
                 features2_time.append(max_eig_movavg_time_2)
 
-    ###Load in files and calculate covariance & max eigenvalue, append to features 2D array
-    ###Freq, nobody in room
+    ###Load in files and calculate covariance & max eigenvalue for different freq in same sample, append to features 2D array
     for k in range(samples+1):
         mov_avg0_0 = np.loadtxt(sys.argv[2]+"/moving_average_" + sys.argv[3] + "_" + str(k) + ".csv", delimiter=',')
         mov_avg1_0 = np.loadtxt(sys.argv[4]+"/moving_average_" + sys.argv[5] + "_" + str(k) + ".csv", delimiter=',')
         if(len(sys.argv) > 7):
             mov_avg2_0 = np.loadtxt(sys.argv[6]+"/moving_average_" + sys.argv[7] + "_" + str(k) + ".csv", delimiter=',')
-        #print k
-        #print "mov_avg_0 " + str(len(mov_avg0_0))
-        #print "mov_avg_1 " + str(len(mov_avg0_1))
+
         max_eig_movavg_time_0 = []
         max_eig_movavg_time_1 = []
         max_eig_movavg_time_2 = []
@@ -134,7 +119,7 @@ while loop < 1:
             
             if(len(sys.argv) > 7):
                 cov2 = np.cov(mov_avg2_0[n],mov_avg2_0[n+1])
-                max_eig_movavg_time_1.append(max(LA.eigvals(cov1)))
+                max_eig_movavg_time_2.append(max(LA.eigvals(cov2)))
         if k == 0:
             features0_freq = [max_eig_movavg_time_0]
             features1_freq = [max_eig_movavg_time_1]
@@ -146,10 +131,6 @@ while loop < 1:
             if(len(sys.argv) > 7):
                 features2_freq.append(max_eig_movavg_time_2)
             
-    #print len(features0_time[0])
-    #print len(features1_time[0])
-    #print len(features0_freq[0])
-    #print len(features1_freq[0])
 
     ##############################################################################################################
     ###Split data into training and testing
@@ -186,7 +167,7 @@ while loop < 1:
         training_features_freq2 = features2_freq[0:int(train_freq)]
         testing_features_freq2 = features2_freq[int(train_freq):]
 
-    #Data from both
+    #Data from all
     training_features_time = training_features_time0 + training_features_time1
     training_features_freq = training_features_freq0 + training_features_freq1
     testing_features_time = testing_features_time0 + testing_features_time1
@@ -196,10 +177,6 @@ while loop < 1:
         training_features_freq = training_features_freq + training_features_freq2
         testing_features_time = testing_features_time + testing_features_time2
         testing_features_freq = testing_features_freq + testing_features_freq2
-    #print len(training_features_time)
-    #print len(testing_features_time)
-    #print len(training_features_freq)
-    #print len(testing_features_freq)
 
     #Target
     target_time = np.repeat(target_val_time,int(len(training_features_time0)))
@@ -207,19 +184,10 @@ while loop < 1:
 
     target_freq = np.repeat(target_val_time,int(len(training_features_freq0)))
     gnd_truth_target_freq = np.repeat(target_val_time,int(len(testing_features_freq0)))
-    #target_freq = np.vstack((target_freq))
-    #print target_freq
-
-    #print len(target_time)
-    #print len(gnd_truth_target_time)
-    #print len(target_freq)
-    #print len(gnd_truth_target_freq)
-
-    #print (target_time)
-    #print (gnd_truth_target_time)
-    #print (target_freq)
-    #print (gnd_truth_target_freq)
-
+        
+    #######################################################################################################
+    ###Determine algorithm to use & Fit training data to target & Make prediction on testing data
+    
     def check_error(gnd_truth,x):
         ###Print ground truth, prediction, and accuracy
         print("Ground Truth: " + str(gnd_truth))
@@ -227,8 +195,7 @@ while loop < 1:
         print("Prediction  : " + str(x))
         accuracy = accuracy_score(gnd_truth,x)
         print("Accuracy: " + str(accuracy))
-    #######################################################################################################
-    ###Determine algorithm to use & Fit training data to target & Make prediction on testing data
+    
     if sys.argv[1] == 'svm':
         ###SKLEARN
         print "Using Time:"
@@ -243,7 +210,6 @@ while loop < 1:
         x2 = sklearn_clf.predict(testing_features_freq)
         check_error(gnd_truth_target_freq,x2)
  
-        
     elif sys.argv[1] == 'knn':
         ###SKLEARN
         neighbor = 7
@@ -262,12 +228,19 @@ while loop < 1:
         
     elif sys.argv[1] == 'dt':
         clf = DecisionTreeClassifier(random_state = 0)
-        print(cross_val_score(clf, training_features_time,target_time, cv=10))
+        #print(cross_val_score(clf, training_features_time,target_time, cv=10))
         clf.fit(training_features_time,target_time)
         x = clf.predict(testing_features_time)
         check_error(gnd_truth_target_time,x)
+        
+        clf = DecisionTreeClassifier(random_state = 0)
+        #print(cross_val_score(clf, training_features_freq,target_freq, cv=10))
+        clf.fit(training_features_freq,target_freq)
+        x = clf.predict(testing_features_freq)
+        check_error(gnd_truth_target_freq,x)
+        
     elif sys.argv[1] == 'kmeans':
-        numfiles = 2
+        numfiles = len(sys.argv)-4
         kmeans = KMeans(n_clusters=numfiles)
         kmeans.fit(training_features_time,target_time)
         x = kmeans.predict(testing_features_time)
@@ -301,6 +274,6 @@ while loop < 1:
     else:
         print("Current algorithms available: svm, knn, dt, kmeans")
         print("Usage: python training_data.py <classifier_type> <folder> <filenum0> <folder> <filenum1> <folder> <filenum2>")
-        print("Example: python training_data.py svm Test1")
+        print("Example: python training_data.py svm Test1 0 Test2 1 Test3 2")
         sys.exit(1)
 

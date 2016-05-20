@@ -22,17 +22,17 @@ Folders:
 Videos:
     subcarrier_0_s1.ogv
     subcarrier_0_s2.ogv
-        -Plots of the file 'moving_average_016_0.csv' and 'moving_average_016_1.csv' in the folder'Nobody_16smples'
+        -Plots of the file 'moving_average_016_0.csv' and 'moving_average_016_1.csv' in the folder 'Nobody_16smples'
     
     subcarrier_1_moving_s1.ogv
     subcarrier_1_moving_s2.ogv
-        -Plots of the file 'moving_average_116_0.csv' and 'moving_average_116_1.csv' in the folder'Moving1_16smples'
+        -Plots of the file 'moving_average_116_0.csv' and 'moving_average_116_1.csv' in the folder 'Moving1_16smples'
     
     subcarrier_1_static_s1.ogv
     subcarrier_1_static_s2.ogv
-        -Plots of the file 'moving_average_116_0.csv' and 'moving_average_116_1.csv' in the folder'Static1_16smples'
+        -Plots of the file 'moving_average_116_0.csv' and 'moving_average_116_1.csv' in the folder 'Static1_16smples'
     
-    -x axis of plot is time
+    -x axis of plot is time/measurement number
     -y axis of plot is the moving average of the received signal strength of the subcarrier frequency
     -Each plot represents 1 of 217 subcarriers
     -Video shows all 217 plots/subcarriers
