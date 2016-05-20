@@ -200,7 +200,7 @@ while loops < n:
         not_enough_samples = False
         for i in range(217):
             if len(subcarrier_data[i]) < numSamples:
-                print("Subcarrier freq length: " + str(len(subcarrier_data[i])) + " at freq: " + str(determine_freq_from_index(i)))
+                print(str(loops) + ": Subcarrier freq length: " + str(len(subcarrier_data[i])) + " at freq: " + str(determine_freq_from_index(i)))
                 not_enough_samples = True
                 break
         if not_enough_samples:
