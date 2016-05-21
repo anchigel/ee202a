@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 #
 # Copyright 2015 Bastian Bloessl <bloessl@ccs-labs.org>
@@ -83,7 +84,12 @@ file_name = sys.argv[1] + '/testFeatures_' + sys.argv[2] + '.csv'
 open(file_name, 'w').close()
 
 ###Run commands on router to began spectral scanning
-stdin, stdout, stderr = client.exec_command('echo 16 > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_count')
+##Original values:
+##  spectral_fft_period = 15
+##  spectral_period_255
+stdin, stdout, stderr = client.exec_command('echo 100 > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_period')
+stdin, stdout, stderr = client.exec_command('echo 15 > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_fft_period')
+stdin, stdout, stderr = client.exec_command('echo 64 > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_count')
 stdin, stdout, stderr = client.exec_command('echo chanscan > /sys/kernel/debug/ieee80211/phy0/ath9k/spectral_scan_ctl')
 
 ###Determine number of samples to collect
@@ -170,7 +176,7 @@ while loops < n:
             fig2.canvas.draw()
             raw_input("Hit enter to continue:")
         
-        def plot_mov_avg(values,n):
+        def plot_mov_avg(values,n,numSamples):
             mov_avg = moving_average(values,n)
             #scatter2.set_xdata(range(len(mov_avg)))
             #scatter2.set_ydata(10.0 * np.log10(mov_avg))
@@ -178,10 +184,11 @@ while loops < n:
             
             for i,val in enumerate(mov_avg):
                 if i < numSamples-(n-1):
-                    if i < numSamples-(n-2):
-                        fd.write(str(10.0 * np.log10(val)) + ',')
-                    else:
+                    if i == numSamples-n:
                         fd.write(str(10.0 * np.log10(val)))
+                        break
+                    else:
+                        fd.write(str(10.0 * np.log10(val)) + ',')
                 else:
                     break
             fd.write('\n')
@@ -196,7 +203,7 @@ while loops < n:
         
         ###Check number of samples in each subcarrier freq
         ###If less than numSamples, throw out this 'samples' file
-        numSamples = 16
+        numSamples = 64
         not_enough_samples = False
         for i in range(217):
             if len(subcarrier_data[i]) < numSamples:
@@ -211,7 +218,7 @@ while loops < n:
                    
         window_size = 3
         for i in range(217):
-            plot_mov_avg(subcarrier_data[i],window_size)  
+            plot_mov_avg(subcarrier_data[i],window_size,numSamples)  
         fd.close()
                 
         ###Plot overall averaged spectrum
