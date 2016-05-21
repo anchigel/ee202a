@@ -3,3 +3,52 @@ Raymond Andrade & Anchi Su
 
 Wifi Backscatter Based Spy
 
+Workflow:
+    1. Use send_pck.py to send/inject packets into the network using the transmitting router
+    2. While send_pck.py is running, use spectrum.py to collect data for different number of people in the room using the receiving router
+    3. Plot the data after processing using plot_subcarrier.py and plot_mov_avg.py for visualization
+    4. Use machine_learning.py to train the data and test for the number of people in the room
+
+send_pck.py
+    -Continuously send packets
+    -USAGE: sudo python send_pck.py
+
+spectrum.py
+    -SSH into router, collect channel information, saves the measurements into a binary file named 'samples'
+    -Process the binary file and produce a frequency vs. signal strength plot
+    -Saves the moving average of the RSS of the subcarrier frequencies into a file called moving_average_X_X.csv
+    -Saves the averaged signal strength values into a file called testFeatures_X.csv 
+    -Saves a copy of each 'samples' file as a binary file called 'samples_X'
+    -Continuously collect, retrieve, process, and plot data such that the plot will automatically update
+    -USAGE: python spectrum.py  <folder> <ending filename> <num samples>
+    
+training_data.py
+    -old version of machine_learning.py
+    -do not use
+    -USAGE: python training_data.py <type> <folder> <file num1> <folder> <file num2> <folder> <file num3>
+
+neural_network.py
+    -Using neutral networks to predict the number of people in the room
+    -No longer using this
+
+machine_learning.py
+    -Using machine learning algorithms to predict the number of people in the room
+    -70% of input data is used for training while 30% is used for testing
+    -Outputs the prediction and actual target values with the accuracy
+    -Each folder in the argument to the program represents a dataset that correspond to a particular case/target
+    -E.g. Folder0 -> no one in room, Folder1 -> one person in room, etc.
+    -USAGE: python machine_learning.py <classifier_type> <folder> <folder> .... <folder>
+    
+mov_avg_processing.py
+    -Takes 'samples_X' binary files and produces moving_average_X.csv files using a given window size
+    -Num measurements is the number of measurements taken per channel in the samples file
+    -USAGE: python mov_avg_plot_subcarrierprocessing.py <input folder> <output folder> <num files> <num measurements> <window size>
+    
+plot_mov_avg.py
+    -Plots the moving average values in the files in the given folder
+    -Usage: python plot_mov_avg.py <folder> <num files> <num measurements>
+
+plot_subcarrier.py
+    -Plots the RSS of each subcarrier frequency in the samples files in the given folder
+    -Usage: python plot_subcarrier.py <folder> <num files> <num measurements>
+

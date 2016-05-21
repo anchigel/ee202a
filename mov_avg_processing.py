@@ -19,13 +19,13 @@ from time import sleep
 ### Arguments: 
 ### <folder>: folder in current directory that contains the samples_X files
 ### <output folder>: folder in which output files will be saved
-### python mov_avg_processing.py <folder> <output folder> 
-### Example: python training_data.py svm Test1 0 Test2 1 Test3 2
+### python mov_avg_processing.py <input folder> <output folder> <num files> <num measurements> <window size>
+### Example: python mov_avg_processing.py Test1 Test2 50 32
 #################################################################################################
 
-if len(sys.argv) < 5:
-    print("Usage: python mov_avg_processing.py <folder> <folder> <num files> <num measurements>")
-    print("Example: python mov_avg_processing.py Test1 Test2 50")
+if len(sys.argv) < 6:
+    print("Usage: python mov_avg_processing.py <input folder> <output folder> <num files> <num measurements> <window size>")
+    print("Example: python mov_avg_processing.py Test1 Test2 50 32 5")
     sys.exit(1)
 
 plt.ion()
@@ -43,9 +43,9 @@ plt.grid(True)
 if not os.path.exists(sys.argv[2]):
     os.makedirs(sys.argv[2])
 
-window_size = 3
-numSamples = int(sys.argv[4])
 numFiles = int(sys.argv[3])
+numSamples = int(sys.argv[4])
+window_size = int(sys.argv[5])
 for loop in range(numFiles):
 
     with open(sys.argv[1] + "samples_" + str(loop), "rb") as file:
