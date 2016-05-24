@@ -17,7 +17,7 @@ from time import sleep
 ### python plot_mov_avg.py <folder> <num files>
 
 if len(sys.argv) < 4:
-    print("Usage: python plot_mov_avg.py <folder> <num files> <num measurements> <folder> <folder>")
+    print("Usage: python plot_mov_avg.py <folder> <windowsize> <num measurements> <folder> <folder>")
     print("Example: python plot_mov_avg.py Test1 10 16")
     sys.exit(1)
 
@@ -41,13 +41,13 @@ def plot_mov_avg(values1,values2=0,values3=0):
         scatter3.set_ydata(values3)
     fig.canvas.draw()
 
-for l in range(int(sys.argv[2])):
+for l in range(50):
     raw_input("Hit enter to continue:")
-    mov_avg0_0 = np.loadtxt(sys.argv[1]+"/moving_average_0_" + str(l) + ".csv", delimiter=',')
+    mov_avg0_0 = np.loadtxt(sys.argv[1]+"/moving_average_" + sys.argv[2] +"_" + str(l) + ".csv", delimiter=',')
     if len(sys.argv) > 4:
-        mov_avg0_1 = np.loadtxt(sys.argv[4]+"/moving_average_0_" + str(l) + ".csv", delimiter=',')
+        mov_avg0_1 = np.loadtxt(sys.argv[4]+"/moving_average_" + sys.argv[2] + "_" + str(l) + ".csv", delimiter=',')
     if len(sys.argv) > 5:
-        mov_avg0_2 = np.loadtxt(sys.argv[5]+"/moving_average_0_" + str(l) + ".csv", delimiter=',')
+        mov_avg0_2 = np.loadtxt(sys.argv[5]+"/moving_average_" + sys.argv[2] + "_" + str(l) + ".csv", delimiter=',')
     for k in range(217):
         if len(sys.argv) > 5:
             plot_mov_avg(mov_avg0_0[k],mov_avg0_1[k],mov_avg0_2[k])

@@ -141,7 +141,7 @@ for loop in range(numFiles):
             subcarrier_data[int(ind)].append(value)      
         
         ###Write moving average values into file
-        fd = open(sys.argv[2] + "/moving_average_" + str(loop) + ".csv",'w')
+        fd = open(sys.argv[2] + "/moving_average_" + str(window_size) + "_" + str(loop) + ".csv",'w')
                    
         for i in range(217):
             plot_mov_avg(subcarrier_data[i],window_size,numSamples)  
@@ -155,7 +155,7 @@ for loop in range(numFiles):
         spectrum = group.mean()
         spectrum_min = group.min()
         spectrum_max = group.max()
-
+        """
         scatter.set_xdata(spectrum.index)
         TestData = [10.0 * np.log10(val) for val in spectrum['rssi']]
         #TestData = spectrum['rssi']
@@ -167,6 +167,7 @@ for loop in range(numFiles):
         scatter_max.set_xdata(spectrum_max.index)
         scatter_max.set_ydata([10.0 * np.log10(val) for val in spectrum_max['rssi']])
         fig.canvas.draw()
+        """
     ###End of processing one 'samples' file
     
 ###End of while loop

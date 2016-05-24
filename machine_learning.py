@@ -23,15 +23,17 @@ from time import sleep
 #################################################################################################
 
 if len(sys.argv) < 4:
-    print("Usage: python machine_learning.py <classifier_type> <folder> <folder> ... <folder>")
-    print("Example: python machine_learning.py svm Test1 Test2 Test3")
+    print("Usage: python machine_learning.py <classifier_type> <samples> <folder> <folder> ... <folder>")
+    print("Example: python machine_learning.py svm 10 Test1 Test2 Test3")
     sys.exit(1)
 
 ###Constants
+###If runnining_tests == True, samples will loop through 5 to 45
+###Otherwise, samples will be the 2nd argument to the program
 running_tests = True
-samples = 9
+samples = int(sys.argv[2])
 training_part = 0.7
-numFolders = len(sys.argv)-2
+numFolders = len(sys.argv)-3
 numFeatures = 1
 target_val = np.array(range(numFolders))
 
@@ -50,13 +52,13 @@ def check_error(gnd_truth,x):
     print("Accuracy  : " + str(accuracy))
 
 if running_tests:
-    num_loops = 46
+    num_loops = 40
 else:
     num_loops = 1
 
 for loops in range(num_loops):
     if running_tests:
-        samples = loops + 3
+        samples = loops + 5
         print "\nSamples: " + str(samples)
     
     training_target = np.repeat(target_val,int(samples*training_part*numFeatures))
@@ -64,20 +66,16 @@ for loops in range(num_loops):
     
     ###Process files in each folder
     for index in range(len(sys.argv)):
-        if index > 1:
+        if index > 2:
             ###Load in files and process them
             for k in range(samples):
                 mov_avg0_0 = np.loadtxt(sys.argv[index]+"/moving_average_0_" + str(k) + ".csv", delimiter=',')
-                mov_avg0_1 = np.loadtxt(sys.argv[index]+"/moving_average_0_" + str(k+1) + ".csv", delimiter=',')
+                mov_avg0_1 = np.loadtxt(sys.argv[index]+"/moving_average_0_" + str(k+1) + ".csv", delimiter=',')                
                 
                 features_arr = []
-                #max_eig_movavg_0 = []
-                #max_eig_movavg_1 = []
-                #correlation = []
                 for n in range(len(mov_avg0_0)-1):
                     ###Features: 
                     
-                    ###TODO: as separate arrays or place all features in one array???
                     ###Eigenvalues of the covariance of the moving average of the RSS of each subcarrier
                     ###Taking the covariance of the mov avg RSS of the same subcarrier freq of consecutive samples -> changes in time
                     cov0 = np.cov(mov_avg0_0[n],mov_avg0_1[n])
@@ -85,20 +83,13 @@ for loops in range(num_loops):
                     features_arr.append(eig0[0])
                     features_arr.append(eig0[1])
                     
-                    ###TODO: Add more features here
                     ###Correlation
-                    #corr = np.correlate(mov_avg0_0[n],mov_avg0_1[n], "valid")
                     corr = np.correlate(mov_avg0_0[n],mov_avg0_1[n], "same")
-                    #corr = np.correlate(mov_avg0_0[n],mov_avg0_1[n], "full")
                     list_corr = corr.tolist()
                     features_arr = features_arr + list_corr
-                    #max_eig_movavg_0.append(corr.tolist())
-                    #print "Correlation:" + str(list_corr)
-                    
-                    
-                    
+                                       
                 ##features is a list of lists: [ [], [],..., [] ]
-                ##max_eig_movavg_time_0 is a list [x1,x2...,x3]
+                ##features_arr is a list [x1,x2...,x3]
                 if k == 0:
                     features = [features_arr]
                     #features.append(max_eig_movavg_1)
@@ -109,10 +100,10 @@ for loops in range(num_loops):
                     #features.append(correlation)
                     
             training_data0,testing_data0 = split_data(features,training_part)
-            if index == 2:
+            if index == 3:
                 training_data = training_data0
                 testing_data = testing_data0
-            elif index > 2:
+            elif index > 3:
                 training_data = training_data + training_data0
                 testing_data = testing_data + testing_data0
         
@@ -123,8 +114,6 @@ for loops in range(num_loops):
     #print len(training_target)
     #print len(testing_target)
     #print  (training_data[11])
-    #print len(features0_time)
-    #print len(features0_time[0])
 
     if sys.argv[1] == 'svm':
         ###SKLEARN
@@ -133,16 +122,10 @@ for loops in range(num_loops):
         sklearn_clf.fit(training_data,training_target)
         x = sklearn_clf.predict(testing_data)
         check_error(testing_target,x)
-            
-            #print "Using Freq:"
-            #sklearn_clf = svm.SVC(gamma=0.0001)
-            #sklearn_clf.fit(training_features_freq,target_freq)
-            #x2 = sklearn_clf.predict(testing_features_freq)
-            #check_error(gnd_truth_target_freq,x2)
      
     elif sys.argv[1] == 'knn':
         ###SKLEARN
-        sklearn_clf = neighbors.KNeighborsClassifier()
+        sklearn_clf = neighbors.KNeighborsClassifier(n_neighbors=5)
         sklearn_clf.fit(training_data,training_target)
         x = sklearn_clf.predict(testing_data)
         check_error(testing_target,x)
@@ -171,23 +154,12 @@ for loops in range(num_loops):
         testing_target_2 = np.repeat([0],samples)
         check_error(testing_target_2,x)
         """
-            #print "Using Freq:"
-            #sklearn_clf = neighbors.KNeighborsClassifier(weights='uniform')
-            #sklearn_clf.fit(training_features_freq,target_freq)
-            #x2 = sklearn_clf.predict(testing_features_freq)
-            #check_error(gnd_truth_target_freq,x2)
-            
+
     elif sys.argv[1] == 'dt':
         sklearn_clf = DecisionTreeClassifier()
         sklearn_clf.fit(training_data,training_target)
         x = sklearn_clf.predict(testing_data)
         check_error(testing_target,x)
-            
-            #clf = DecisionTreeClassifier(random_state = 0)
-            #print(cross_val_score(clf, training_features_freq,target_freq, cv=10))
-            #clf.fit(training_features_freq,target_freq)
-            #x = clf.predict(testing_features_freq)
-            #check_error(gnd_truth_target_freq,x)
             
     elif sys.argv[1] == 'kmeans':
             kmeans = KMeans(n_clusters=numFolders)
