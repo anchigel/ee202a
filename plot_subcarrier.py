@@ -17,7 +17,7 @@ from time import sleep
 
 if len(sys.argv) < 4:
     print("Usage: python plot_subcarrier.py <folder> <num files> <num measurements> <folder> <folder>")
-    print("Example: python plot_subcarrier.py Test1 10 16")
+    print("Example: python plot_subcarrier.py Test1 50 16")
     sys.exit(1)
 
 numFiles = int(sys.argv[2])

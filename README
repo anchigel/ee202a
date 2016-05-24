@@ -37,7 +37,7 @@ machine_learning.py
     -Outputs the prediction and actual target values with the accuracy
     -Each folder in the argument to the program represents a dataset that correspond to a particular case/target
     -E.g. Folder0 -> no one in room, Folder1 -> one person in room, etc.
-    -USAGE: python machine_learning.py <classifier_type> <folder> <folder> .... <folder>
+    -USAGE: python machine_learning.py <classifier_type> <samples> <folder> <folder> .... <folder>
     
 mov_avg_processing.py
     -Takes 'samples_X' binary files and produces moving_average_X.csv files using a given window size
@@ -46,9 +46,9 @@ mov_avg_processing.py
     
 plot_mov_avg.py
     -Plots the moving average values in the files in the given folder
-    -Usage: python plot_mov_avg.py <folder> <num files> <num measurements>
+    -Usage: python plot_mov_avg.py <folder> <window size> <num measurements> (optional: <folder> <folder>)
 
 plot_subcarrier.py
     -Plots the RSS of each subcarrier frequency in the samples files in the given folder
-    -Usage: python plot_subcarrier.py <folder> <num files> <num measurements>
+    -Usage: python plot_subcarrier.py <folder> <num files> <num measurements> (optional: <folder> <folder>)
 

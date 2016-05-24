@@ -18,7 +18,7 @@ from time import sleep
 ### <folder>: folder in current directory that contains the moving_average_0_x.csv files
 ###           each folder will represent one case/target
 ###           e.g. Test0 -> no one in room, Test1 -> one person in room, etc.
-### python machine_learning <type> <folder> <folder> ... <folder>
+### python machine_learning <type> <samples> <folder> <folder> ... <folder>
 ### Example: python machine_learning svm Test0 Test1 Test2
 #################################################################################################
 
