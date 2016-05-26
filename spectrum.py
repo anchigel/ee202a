@@ -22,9 +22,9 @@
 ### For training purposes: <ending filename>: string to be appended to the filename 
 ###                        <num samples>: number of samples to be collected
 ### python spectrum.py <folder> <ending filename> <num samples> 
-### Example: python spectrum.py Exp1 0 50
-###     Output files will include moving_average_X.csv with 50 samples within the file, samples_X
-###         X: 0 to (num samples)
+### Example: python spectrum.py Exp1 50
+###     Output files will include moving_average_0_X.csv with 50 samples within the file, samples_X
+###         X: 0 to (num samples-1)
 ###     All located in folder Exp1
 ##########################################################################################################
 
@@ -72,16 +72,16 @@ client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect("192.168.8.1", username='root', password='myRouter')
 
 ###Output file name
-if len(sys.argv) < 4:
-    print("python spectrum.py <folder> <ending filename> <num samples>")
-    print("Example: python spectrum.py Exp1 0 50")
+if len(sys.argv) < 3:
+    print("python spectrum.py <folder> <num samples>")
+    print("Example: python spectrum.py Exp1 50")
     sys.exit(1)
 
 if not os.path.exists(sys.argv[1]):
     os.makedirs(sys.argv[1])
 
-file_name = sys.argv[1] + '/testFeatures_' + sys.argv[2] + '.csv'
-open(file_name, 'w').close()
+#file_name = sys.argv[1] + '/testFeatures_' + sys.argv[2] + '.csv'
+#open(file_name, 'w').close()
 
 ###Run commands on router to began spectral scanning
 ##Original values:
@@ -94,7 +94,7 @@ stdin, stdout, stderr = client.exec_command('echo chanscan > /sys/kernel/debug/i
 
 ###Determine number of samples to collect
 loops = 0
-n = int(sys.argv[3])
+n = int(sys.argv[2])
 
 while loops < n:
     ### do measurement
@@ -214,7 +214,7 @@ while loops < n:
             continue
         
         ###Write moving average values into file
-        fd = open(sys.argv[1] + "/moving_average_" + sys.argv[2] + "_" + str(loops) + ".csv",'w')
+        fd = open(sys.argv[1] + "/moving_average_0_" + str(loops) + ".csv",'w')
                    
         window_size = 3
         for i in range(217):
@@ -242,7 +242,7 @@ while loops < n:
         fig.canvas.draw()
     
     ###Append data from 'samples' to csv file
-	tDfile = open(file_name, 'a')
+	#tDfile = open(file_name, 'a')
 	    
     y = len(TestData)
     print(str(loops+1) + ": " + str(y))
@@ -259,11 +259,11 @@ while loops < n:
             continue
                 
         ###Data should be ok, write into file
-        for z, item in enumerate(TestData):
-            tDfile.write(str(item))
-            if z < y-1:
-                tDfile.write(',')
-        tDfile.write('\n')	
+        #for z, item in enumerate(TestData):
+        #    tDfile.write(str(item))
+        #    if z < y-1:
+        #        tDfile.write(',')
+        #tDfile.write('\n')	
         
         ###Save the samples file
         copyfile('samples', sys.argv[1] + '/samples_' + str(loops))
@@ -272,6 +272,6 @@ while loops < n:
     
 ###End of while loop
 
-tDfile.close()
+#tDfile.close()
 scp.close()
 client.close()
