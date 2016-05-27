@@ -144,7 +144,9 @@ for loop in range(numFiles):
         fd = open(sys.argv[2] + "/moving_average_" + str(window_size) + "_" + str(loop) + ".csv",'w')
                    
         for i in range(217):
-            plot_mov_avg(subcarrier_data[i],window_size,numSamples)  
+            fr = determine_freq_from_index(i)
+            if fr >= 2413.25 and fr < 2430.75:
+                plot_mov_avg(subcarrier_data[i],window_size,numSamples)  
         fd.close()
       
       

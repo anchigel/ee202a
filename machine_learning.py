@@ -31,8 +31,10 @@ if len(sys.argv) < 4:
 ###If runnining_tests == True, samples will loop through 5 to 45
 ###Otherwise, samples will be the 2nd argument to the program
 running_tests = False
-samples = int(sys.argv[2])
-numFolders = len(sys.argv)-3
+if len(sys.argv) == 5:
+    numFolders = len(sys.argv)-3
+else:
+    numFolders = len(sys.argv)-4
 target_val = np.array(range(numFolders))
 
 ###Split data into two parts based on the given percentage
@@ -58,35 +60,40 @@ def autocorr(x):
     return result[result.size/2:]
 
 if running_tests:
-    num_loops = 40
+    num_loops = 48
 else:
     num_loops = 1
 
 training_part = 3
-tot_num_files = 7
-training_target = np.repeat(target_val,training_part)
-testing_target = np.repeat(target_val,tot_num_files - training_part)
+tot_num_files = 20
+
 
 for loops in range(num_loops):
-    #if running_tests:
-        #training_part = loops + 5
+    if running_tests:
+        #training_part = loops + 3
+        tot_num_files = loops + 5
         #samples = loops + 5
         #print "\nSamples: " + str(samples)
-        #tot_num_files = 15 + loops
-        #print "\nNum files: " + str(tot_num_files)
+        #tot_num_files = 5 + loops
+        print "\nFiles: " + str(tot_num_files)
     
     #part = 0.7
     #training_target = np.repeat(target_val,int(samples*part))
     #testing_target = np.repeat(target_val,samples - int(samples*part))
-    
+    training_target = np.repeat(target_val,training_part)
+    testing_target = np.repeat(target_val,tot_num_files - training_part)
     ###Process files in each folder
-    for index in range(len(sys.argv)):
+    if numFolders == 2:
+        range_num = len(sys.argv)
+    else:
+        range_num = len(sys.argv)-1
+    for index in range(range_num):
         if index > 2:
             ###Load in files and process them
             for k in range(tot_num_files):
-                mov_avg0_0 = np.loadtxt(sys.argv[index]+"/moving_average_0_" + str(k) + ".csv", delimiter=',')
-                mov_avg0_1 = np.loadtxt(sys.argv[index]+"/moving_average_0_" + str(k+1) + ".csv", delimiter=',')                
-                
+                mov_avg0_0 = np.loadtxt(sys.argv[index]+"/moving_average_3_" + str(k) + ".csv", delimiter=',')
+                mov_avg0_1 = np.loadtxt(sys.argv[index]+"/moving_average_3_" + str(k+1) + ".csv", delimiter=',')                
+                #print k
                 features_arr = []
                 for n in range(len(mov_avg0_0)-1):
                     ###Features: 
@@ -134,7 +141,79 @@ for loops in range(num_loops):
     #print len(training_target)
     #print len(testing_target)
     #print  (training_data[11])
-
+    numNeighbrs = 4
+    """
+    select = int(sys.argv[2])
+    if numFolders > 2:
+        select2 = int(sys.argv[6])
+    test_part = 38
+    for loop in range(numFolders):
+        for k in range(test_part):
+            tar = [0,1]
+            if loop == 0:
+                mov_avg0_0 = np.loadtxt("Exp2/person0_32/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                mov_avg0_1 = np.loadtxt("Exp2/person0_32/moving_average_0_" + str(k+1) + ".csv", delimiter=',')
+            elif loop == 1:
+                if select == 1:
+                    mov_avg0_0 = np.loadtxt("Exp2/person1static_32/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                    mov_avg0_1 = np.loadtxt("Exp2/person1static_32/moving_average_0_" + str(k+1) + ".csv", delimiter=',')        
+                elif select == 2:
+                    mov_avg0_0 = np.loadtxt("Exp2/person1mov_32/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                    mov_avg0_1 = np.loadtxt("Exp2/person1mov_32/moving_average_0_" + str(k+1) + ".csv", delimiter=',')  
+                elif select == 3:
+                    mov_avg0_0 = np.loadtxt("Exp2/person2static_32/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                    mov_avg0_1 = np.loadtxt("Exp2/person2static_32/moving_average_0_" + str(k+1) + ".csv", delimiter=',')        
+                elif select == 4:
+                    mov_avg0_0 = np.loadtxt("Exp2/person2mov_32/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                    mov_avg0_1 = np.loadtxt("Exp2/person2mov_32/moving_average_0_" + str(k+1) + ".csv", delimiter=',')   
+            elif loop == 2:
+                tar = [0,1,2]
+                if select2 == 1:
+                    mov_avg0_0 = np.loadtxt("Exp2/person1static_32/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                    mov_avg0_1 = np.loadtxt("Exp2/person1static_32/moving_average_0_" + str(k+1) + ".csv", delimiter=',')        
+                elif select2 == 2:
+                    mov_avg0_0 = np.loadtxt("Exp2/person1mov_32/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                    mov_avg0_1 = np.loadtxt("Exp2/person1mov_32/moving_average_0_" + str(k+1) + ".csv", delimiter=',')  
+                elif select2 == 3:
+                    mov_avg0_0 = np.loadtxt("Exp2/person2static_32/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                    mov_avg0_1 = np.loadtxt("Exp2/person2static_32/moving_average_0_" + str(k+1) + ".csv", delimiter=',')        
+                elif select2 == 4:
+                    mov_avg0_0 = np.loadtxt("Exp2/person2mov_32/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                    mov_avg0_1 = np.loadtxt("Exp2/person2mov_32/moving_average_0_" + str(k+1) + ".csv", delimiter=',')  
+                        
+            features_arr = []
+            for n in range(len(mov_avg0_0)-1):
+                            ###Features: numFolders
+                            
+                            ###Eigenvalues of the covariance of the moving average of the RSS of each subcarrier
+                            ###Taking the covariance of the mov avg RSS of the same subcarrier freq of consecutive samples -> changes in time
+                cov0 = np.cov(mov_avg0_0[n],mov_avg0_1[n])
+                eig0 = LA.eigvals(cov0)
+                features_arr.append(eig0[0])
+                features_arr.append(eig0[1])
+                            
+                            ###Correlation
+                corr = np.correlate(mov_avg0_0[n],mov_avg0_1[n], "same")
+                list_corr = corr.tolist()
+                features_arr = features_arr + list_corr
+                            
+                            ###Autocorrelation
+                            #auto_corr = autocorr(mov_avg0_0[n])
+                            #list_autocorr = auto_corr.tolist()
+                            #features_arr = features_arr + list_autocorr                 
+                                               
+                        ##features is a list of lists: [ [], [],..., [] ]
+                        ##features_arr is a list [x1,x2...,xn]
+            if k == 0:
+                features = [features_arr]
+            else:
+                features.append(features_arr)
+        if loop == 0:
+            train = features
+        else:
+            train = train + features
+        #print len(train)
+    """
     if sys.argv[1] == 'svm':
         ###SKLEARN
         #print "Using Time:"
@@ -143,52 +222,63 @@ for loops in range(num_loops):
         x = sklearn_clf.predict(testing_data)
         check_error(testing_target,x)
         
+        #x = sklearn_clf.predict(train)
+        #check_error(np.repeat([tar],test_part),x) 
 
     elif sys.argv[1] == 'knn':
         ###SKLEARN
-        sklearn_clf = neighbors.KNeighborsClassifier(n_neighbors=5)
+        sklearn_clf = neighbors.KNeighborsClassifier(n_neighbors=numNeighbrs)
         sklearn_clf.fit(training_data,training_target)
         x = sklearn_clf.predict(testing_data)
         check_error(testing_target,x)
+        
+        #print len(train)
+        #print len(testing_target)
+        #x = sklearn_clf.predict(train)
+        #check_error(np.repeat([tar],test_part),x)            
 
     elif sys.argv[1] == 'dt':
-        sklearn_clf = DecisionTreeClassifier(presort='True')
+        sklearn_clf = DecisionTreeClassifier()
         sklearn_clf.fit(training_data,training_target)
         x = sklearn_clf.predict(testing_data)
         check_error(testing_target,x)
             
     elif sys.argv[1] == 'kmeans':
-            kmeans = KMeans(n_clusters=numFolders)
-            kmeans.fit(training_data,training_target)
-            x = kmeans.predict(testing_data)
-            check_error(testing_target,x)
-            """
-            labels = kmeans.labels_
-            centroids = kmeans.cluster_centers_
+        kmeans = KMeans(n_clusters=numFolders)
+        kmeans.fit(training_data,training_target)
+        x = kmeans.predict(testing_data)
+        check_error(testing_target,x)
             
-            for i in range(numFolders):
-                # select only data observations with cluster label == i
-                t_data = np.array(training_data)
-                ds = t_data[np.where(labels==i)]
-                # plot the data observations
-                if i==0:
-                    dot1, = plt.plot(ds[:,0],ds[:,1],'o')
-                elif i==1:
-                    dot2, = plt.plot(ds[:,0],ds[:,1],'o')
-                elif i==2:
-                    dot3, = plt.plot(ds[:,0],ds[:,1],'o')
-                # plot the centroids
-                lines = plt.plot(centroids[i,0],centroids[i,1],'kx')
-                # make the centroid x's bigger
-                plt.setp(lines,ms=15.0)
-                plt.setp(lines,mew=2.0)
-            if (numFolders == 3):
-                leg = plt.legend([dot1, dot2, dot3], ['0','1','2'])
-            else:
-                leg = plt.legend([dot1, dot2], ['0','1'])
-            ax = plt.gca().add_artist(leg)
-            plt.show()
-            """
+        x = kmeans.predict(train)
+        check_error(np.repeat([tar],test_part),x)
+            
+        """
+        labels = kmeans.labels_
+        centroids = kmeans.cluster_centers_
+          
+        for i in range(numFolders):
+            # select only data observations with cluster label == i
+            t_data = np.array(training_data)
+            ds = t_data[np.where(labels==i)]
+            # plot the data observations
+            if i==0:
+                dot1, = plt.plot(ds[:,0],ds[:,1],'o')
+            elif i==1:
+                dot2, = plt.plot(ds[:,0],ds[:,1],'o')
+            elif i==2:
+                dot3, = plt.plot(ds[:,0],ds[:,1],'o')
+            # plot the centroids
+            lines = plt.plot(centroids[i,0],centroids[i,1],'kx')
+            # make the centroid x's bigger
+            plt.setp(lines,ms=15.0)
+            plt.setp(lines,mew=2.0)
+        if (numFolders == 3):
+            leg = plt.legend([dot1, dot2, dot3], ['0','1','2'])
+        else:
+            leg = plt.legend([dot1, dot2], ['0','1'])
+        ax = plt.gca().add_artist(leg)
+        plt.show()
+        """
     else:
         print("Current classifier algorithms available: svm, knn, dt, kmeans")
         sys.exit(1)
