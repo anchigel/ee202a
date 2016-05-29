@@ -11,6 +11,11 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from time import sleep
+from pybrain.datasets            import ClassificationDataSet
+from pybrain.structure.modules   import LSTMLayer, SoftmaxLayer, SigmoidLayer
+from pybrain.supervised          import BackpropTrainer
+from pybrain.tools.shortcuts     import buildNetwork
+from pybrain.utilities           import percentError
 
 ################################################################################################
 ### USAGE:
@@ -18,13 +23,14 @@ from time import sleep
 ### <folder>: folder in current directory that contains the moving_average_0_x.csv files
 ###           each folder will represent one case/target
 ###           e.g. Test0 -> no one in room, Test1 -> one person in room, etc.
-### python machine_learning <type> <samples> <folder> <folder> ... <folder>
-### Example: python machine_learning svm Test0 Test1 Test2
+### <placeholder>: currently has no use
+### python machine_learning <type> <placeholder> <folder> <folder> ... <folder>
+### Example: python machine_learning svm 0 Test0 Test1 Test2
 #################################################################################################
 
 if len(sys.argv) < 4:
-    print("Usage: python machine_learning.py <classifier_type> <samples> <folder> <folder> ... <folder>")
-    print("Example: python machine_learning.py svm 10 Test1 Test2 Test3")
+    print("Usage: python machine_learning.py <classifier_type> <placeholder> <folder> <folder> ... <folder>")
+    print("Example: python machine_learning.py svm 0 Test1 Test2 Test3")
     sys.exit(1)
 
 ###Constants
@@ -34,7 +40,7 @@ running_tests = False
 if len(sys.argv) == 5:
     numFolders = len(sys.argv)-3
 else:
-    numFolders = len(sys.argv)-4
+    numFolders = len(sys.argv)-3
 target_val = np.array(range(numFolders))
 
 ###Split data into two parts based on the given percentage
@@ -64,29 +70,34 @@ if running_tests:
 else:
     num_loops = 1
 
-training_part = 3
-tot_num_files = 20
+if sys.argv[1] == 'nn':
+    training_part = 20
+else:
+    training_part = 3
+tot_num_files = 47
 
 
 for loops in range(num_loops):
     if running_tests:
-        #training_part = loops + 3
-        tot_num_files = loops + 5
+        training_part = loops + 3
+        #tot_num_files = loops + 5
         #samples = loops + 5
         #print "\nSamples: " + str(samples)
         #tot_num_files = 5 + loops
-        print "\nFiles: " + str(tot_num_files)
+        print "\nTraining Part: " + str(training_part)
+        #print "\nFiles: " + str(tot_num_files)
     
     #part = 0.7
     #training_target = np.repeat(target_val,int(samples*part))
     #testing_target = np.repeat(target_val,samples - int(samples*part))
     training_target = np.repeat(target_val,training_part)
     testing_target = np.repeat(target_val,tot_num_files - training_part)
+    
     ###Process files in each folder
     if numFolders == 2:
         range_num = len(sys.argv)
     else:
-        range_num = len(sys.argv)-1
+        range_num = len(sys.argv)
     for index in range(range_num):
         if index > 2:
             ###Load in files and process them
@@ -119,12 +130,8 @@ for loops in range(num_loops):
                 ##features_arr is a list [x1,x2...,xn]
                 if k == 0:
                     features = [features_arr]
-                    #features.append(max_eig_movavg_1)
-                    #features.append(correlation)
                 else:
                     features.append(features_arr)
-                    #features.append(max_eig_movavg_1)
-                    #features.append(correlation)
                     
             training_data0,testing_data0 = split_data(features,training_part)
             if index == 3:
@@ -134,14 +141,14 @@ for loops in range(num_loops):
                 training_data = training_data + training_data0
                 testing_data = testing_data + testing_data0
         
-    #print len(training_data)
+    #print len(training_data[0])
     #print len(testing_data)    
     #print len(training_data[0])
     #print len(testing_data[0])  
     #print len(training_target)
     #print len(testing_target)
     #print  (training_data[11])
-    numNeighbrs = 4
+    numNeighbrs = 3
     """
     select = int(sys.argv[2])
     if numFolders > 2:
@@ -197,10 +204,10 @@ for loops in range(num_loops):
                 list_corr = corr.tolist()
                 features_arr = features_arr + list_corr
                             
-                            ###Autocorrelation
-                            #auto_corr = autocorr(mov_avg0_0[n])
-                            #list_autocorr = auto_corr.tolist()
-                            #features_arr = features_arr + list_autocorr                 
+                ###Autocorrelation
+                auto_corr = autocorr(mov_avg0_0[n])
+                list_autocorr = auto_corr.tolist()
+                features_arr = features_arr + list_autocorr                
                                                
                         ##features is a list of lists: [ [], [],..., [] ]
                         ##features_arr is a list [x1,x2...,xn]
@@ -227,7 +234,7 @@ for loops in range(num_loops):
 
     elif sys.argv[1] == 'knn':
         ###SKLEARN
-        sklearn_clf = neighbors.KNeighborsClassifier(n_neighbors=numNeighbrs)
+        sklearn_clf = neighbors.KNeighborsClassifier(n_neighbors=numNeighbrs, weights='distance')
         sklearn_clf.fit(training_data,training_target)
         x = sklearn_clf.predict(testing_data)
         check_error(testing_target,x)
@@ -249,8 +256,8 @@ for loops in range(num_loops):
         x = kmeans.predict(testing_data)
         check_error(testing_target,x)
             
-        x = kmeans.predict(train)
-        check_error(np.repeat([tar],test_part),x)
+        #x = kmeans.predict(train)
+        #check_error(np.repeat([tar],test_part),x)
             
         """
         labels = kmeans.labels_
@@ -279,7 +286,27 @@ for loops in range(num_loops):
         ax = plt.gca().add_artist(leg)
         plt.show()
         """
+    elif sys.argv[1] == 'nn':
+        DS = ClassificationDataSet(165)
+        training_data = np.array(training_data)
+        training_target = np.vstack(np.array(training_target))
+        print len(training_data[0])
+        #print len(training_target[0])
+        assert(training_data.shape[0] == training_target.shape[0])
+        DS.setField('input', training_data)
+        DS.setField('target', training_target)
+        tstdata, trndata = DS.splitWithProportion(0.15)
+        hidden_layer_neurons = (DS.indim+DS.outdim)/2
+        rnn = buildNetwork(DS.indim,hidden_layer_neurons,DS.outdim,hiddenclass=LSTMLayer,outclass=SigmoidLayer,outputbias=False,recurrent=True)
+        #print hidden_layer_neurons
+        # define a training method
+        trainer = BackpropTrainer(rnn,dataset=trndata, verbose=True) 
+        trainer.trainUntilConvergence(verbose = True, validationProportion = 0.3, maxEpochs = 1000, continueEpochs = 10)
+
+        print 'Percent Error on Test dataset: ' , percentError(trainer.testOnClassData(tstdata, verbose=True), tstdata['target'] )
+        print 'Percent Error on Test dataset: ' , percentError(trainer.testOnClassData(tstdata, verbose=True), tstdata['target'] )
+        #print 'Percent Error on Training dataset: ' , percentError(trainer.testOnClassData(trndata), trndata['target'] )
     else:
-        print("Current classifier algorithms available: svm, knn, dt, kmeans")
+        print("Current classifier algorithms available: svm, knn, dt, kmeans, nn")
         sys.exit(1)
 
