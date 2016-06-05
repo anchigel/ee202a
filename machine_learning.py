@@ -29,8 +29,8 @@ from pybrain.utilities           import percentError
 #################################################################################################
 
 if len(sys.argv) < 4:
-    print("Usage: python machine_learning.py <classifier_type> <placeholder> <folder> <folder> ... <folder>")
-    print("Example: python machine_learning.py svm 0 Test1 Test2 Test3")
+    print("Usage: python machine_learning.py <classifier_type> <placeholder> <folder> <folder> ... <folder> <select2>")
+    print("Example: python machine_learning.py svm 0 Test1 Test2 Test3 1")
     sys.exit(1)
 
 ###Constants
@@ -40,19 +40,21 @@ running_tests = False
 if len(sys.argv) == 5:
     numFolders = len(sys.argv)-3
 else:
-    numFolders = len(sys.argv)-3
+    numFolders = len(sys.argv)-4
 target_val = np.array(range(numFolders))
 
 ###Split data into two parts based on the given percentage
-def split_data(data, part):
+def split_data(data, part, start):
     #part = int(len(data)*part)
     #train = [data[0]]
     #train.append(data[int(len(data)/2)])
     #train.append(data[len(data)-1])
     #test = data[1:int(len(data)/2)] + data[int(len(data)/2)+1:len(data)-1]
-    train = data[:part]
-    test = data[part:]
+    train = data[start:part+start]
+    test = data[:start] + data[part+start:]
     return (train,test)
+
+accuracy_arr = []
 
 def check_error(gnd_truth,x):
     ###Print ground truth, prediction, and accuracy
@@ -60,32 +62,36 @@ def check_error(gnd_truth,x):
     print("Prediction: " + str(x))
     accuracy = accuracy_score(gnd_truth,x)
     print("Accuracy  : " + str(accuracy))
+    accuracy_arr.append(accuracy)
     
 def autocorr(x):
     result = np.correlate(x, x, mode='full')
     return result[result.size/2:]
 
-if running_tests:
-    num_loops = 48
-else:
-    num_loops = 1
-
 if sys.argv[1] == 'nn':
     training_part = 20
 else:
     training_part = 3
-tot_num_files = 47
+tot_num_files = 42
 
+if running_tests:
+    num_loops = tot_num_files - training_part - 1
+else:
+    num_loops = 1
 
 for loops in range(num_loops):
     if running_tests:
-        training_part = loops + 3
+        #training_part = loops + 3
         #tot_num_files = loops + 5
         #samples = loops + 5
         #print "\nSamples: " + str(samples)
         #tot_num_files = 5 + loops
-        print "\nTraining Part: " + str(training_part)
+        start_val = loops
+        #print "\nTraining Part: " + str(training_part)
         #print "\nFiles: " + str(tot_num_files)
+        print "\nStarting Val: " + str(start_val)
+    else:
+        start_val = 11
     
     #part = 0.7
     #training_target = np.repeat(target_val,int(samples*part))
@@ -97,18 +103,22 @@ for loops in range(num_loops):
     if numFolders == 2:
         range_num = len(sys.argv)
     else:
-        range_num = len(sys.argv)
+        range_num = len(sys.argv) - 1
     for index in range(range_num):
         if index > 2:
             ###Load in files and process them
             for k in range(tot_num_files):
-                mov_avg0_0 = np.loadtxt(sys.argv[index]+"/moving_average_3_" + str(k) + ".csv", delimiter=',')
-                mov_avg0_1 = np.loadtxt(sys.argv[index]+"/moving_average_3_" + str(k+1) + ".csv", delimiter=',')                
+                mov_avg0_0 = np.loadtxt(sys.argv[index]+"/moving_average_0_" + str(k) + ".csv", delimiter=',')
+                mov_avg0_1 = np.loadtxt(sys.argv[index]+"/moving_average_0_" + str(k+1) + ".csv", delimiter=',')                
                 #print k
                 features_arr = []
+                #features_arr = mov_avg0_0
+                #print len(features_arr)
                 for n in range(len(mov_avg0_0)-1):
+                    #for m in range(len(mov_avg0_0[0])):
+                    #    features_arr.append(mov_avg0_0[n][m])
                     ###Features: 
-                    
+                        
                     ###Eigenvalues of the covariance of the moving average of the RSS of each subcarrier
                     ###Taking the covariance of the mov avg RSS of the same subcarrier freq of consecutive samples -> changes in time
                     cov0 = np.cov(mov_avg0_0[n],mov_avg0_1[n])
@@ -120,7 +130,7 @@ for loops in range(num_loops):
                     corr = np.correlate(mov_avg0_0[n],mov_avg0_1[n], "same")
                     list_corr = corr.tolist()
                     features_arr = features_arr + list_corr
-                    
+                        
                     ###Autocorrelation
                     #auto_corr = autocorr(mov_avg0_0[n])
                     #list_autocorr = auto_corr.tolist()
@@ -132,8 +142,8 @@ for loops in range(num_loops):
                     features = [features_arr]
                 else:
                     features.append(features_arr)
-                    
-            training_data0,testing_data0 = split_data(features,training_part)
+                #print len(features)
+            training_data0,testing_data0 = split_data(features,training_part,start_val)
             if index == 3:
                 training_data = training_data0
                 testing_data = testing_data0
@@ -141,15 +151,15 @@ for loops in range(num_loops):
                 training_data = training_data + training_data0
                 testing_data = testing_data + testing_data0
         
-    #print len(training_data[0])
+    #print len(training_data)
     #print len(testing_data)    
     #print len(training_data[0])
     #print len(testing_data[0])  
     #print len(training_target)
     #print len(testing_target)
     #print  (training_data[11])
-    numNeighbrs = 3
-    """
+    numNeighbrs = 4
+    
     select = int(sys.argv[2])
     if numFolders > 2:
         select2 = int(sys.argv[6])
@@ -205,9 +215,9 @@ for loops in range(num_loops):
                 features_arr = features_arr + list_corr
                             
                 ###Autocorrelation
-                auto_corr = autocorr(mov_avg0_0[n])
-                list_autocorr = auto_corr.tolist()
-                features_arr = features_arr + list_autocorr                
+                #auto_corr = autocorr(mov_avg0_0[n])
+                #list_autocorr = auto_corr.tolist()
+                #features_arr = features_arr + list_autocorr                
                                                
                         ##features is a list of lists: [ [], [],..., [] ]
                         ##features_arr is a list [x1,x2...,xn]
@@ -220,7 +230,7 @@ for loops in range(num_loops):
         else:
             train = train + features
         #print len(train)
-    """
+ 
     if sys.argv[1] == 'svm':
         ###SKLEARN
         #print "Using Time:"
@@ -229,8 +239,8 @@ for loops in range(num_loops):
         x = sklearn_clf.predict(testing_data)
         check_error(testing_target,x)
         
-        #x = sklearn_clf.predict(train)
-        #check_error(np.repeat([tar],test_part),x) 
+        x = sklearn_clf.predict(train)
+        check_error(np.repeat([tar],test_part),x) 
 
     elif sys.argv[1] == 'knn':
         ###SKLEARN
@@ -241,8 +251,8 @@ for loops in range(num_loops):
         
         #print len(train)
         #print len(testing_target)
-        #x = sklearn_clf.predict(train)
-        #check_error(np.repeat([tar],test_part),x)            
+        x = sklearn_clf.predict(train)
+        check_error(np.repeat([tar],test_part),x)            
 
     elif sys.argv[1] == 'dt':
         sklearn_clf = DecisionTreeClassifier()
@@ -256,8 +266,8 @@ for loops in range(num_loops):
         x = kmeans.predict(testing_data)
         check_error(testing_target,x)
             
-        #x = kmeans.predict(train)
-        #check_error(np.repeat([tar],test_part),x)
+        x = kmeans.predict(train)
+        check_error(np.repeat([tar],test_part),x)
             
         """
         labels = kmeans.labels_
@@ -310,3 +320,5 @@ for loops in range(num_loops):
         print("Current classifier algorithms available: svm, knn, dt, kmeans, nn")
         sys.exit(1)
 
+if running_tests:
+    print "\nMax Accuracy: " + str(max(accuracy_arr))
