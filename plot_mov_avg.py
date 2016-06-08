@@ -15,10 +15,9 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from time import sleep
 
-### python plot_mov_avg.py <folder> <num files>
 
 if len(sys.argv) < 4:
-    print("Usage: python plot_mov_avg.py <folder> 0 <num measurements>")
+    print("Usage: python plot_mov_avg.py <folder> <filename num> <num measurements>")
     print("Example: python plot_mov_avg.py Test1 0 32")
     sys.exit(1)
 

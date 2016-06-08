@@ -33,11 +33,13 @@ neural_network.py
 
 machine_learning.py
     -Using machine learning algorithms to predict the number of people in the room
-    -70% of input data is used for training while 30% is used for testing
+    -Total number of input files used and number of training samples can be adjusted in the code
     -Outputs the prediction and actual target values with the accuracy
     -Each folder in the argument to the program represents a dataset that correspond to a particular case/target
     -E.g. Folder0 -> no one in room, Folder1 -> one person in room, etc.
-    -USAGE: python machine_learning.py <classifier_type> <samples> <folder> <folder> .... <folder>
+    -Placeholder values is typically 0 since the file name is moving_average_0_X.csv
+    -If file name is moving_average_Y_X.csv, replace placeholder value as Y
+    -USAGE: python machine_learning.py <classifier_type> <placeholder> <folder> <folder> .... <folder>
     
 mov_avg_processing.py
     -Takes 'samples_X' binary files and produces moving_average_X.csv files using a given window size
@@ -45,8 +47,9 @@ mov_avg_processing.py
     -USAGE: python mov_avg_plot_subcarrierprocessing.py <input folder> <output folder> <num files> <num measurements> <window size>
     
 plot_mov_avg.py
-    -Plots the moving average values in the files in the given folder
-    -Usage: python plot_mov_avg.py <folder> <window size> <num measurements> (optional: <folder> <folder>)
+    -Plots the moving average values in the files in the given folder as 3D plots (freq, time, and moving average of the subcarrier magnitudes)
+    -filename num corresponds to the value Y in the filename moving_average_Y_X.csv, it is typically 0
+    -Usage: python plot_mov_avg.py <folder> <filename num> <num measurements>
 
 plot_subcarrier.py
     -Plots the RSS of each subcarrier frequency in the samples files in the given folder
